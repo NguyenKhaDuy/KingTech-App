@@ -5,13 +5,11 @@ import { Ionicons } from "@expo/vector-icons";
 export default function ActionButtons({ status }) {
   return (
     <View style={styles.row}>
-      {/* CHI TIẾT */}
       <TouchableOpacity style={styles.btn}>
         <Ionicons name="eye-outline" size={16} />
         <Text style={styles.text}>Chi tiết</Text>
       </TouchableOpacity>
 
-      {/* CẬP NHẬT */}
       <TouchableOpacity style={[styles.btn, styles.primary]}>
         <Ionicons name="create-outline" size={16} color="#fff" />
         <Text style={[styles.text, styles.whiteText]}>Cập nhật</Text>
