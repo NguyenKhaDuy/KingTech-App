@@ -10,7 +10,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 
 export default function LoginScreen() {
-  const navigation = useNavigation(); // ✅ FIX
+  const navigation = useNavigation(); 
 
   return (
     <View style={styles.container}>

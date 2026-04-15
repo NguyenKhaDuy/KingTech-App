@@ -16,6 +16,8 @@ import ChangeEmailScreen from "./src/Screens/User/ChangeEmail/ChangeEmailScreen"
 import HelpScreen from "./src/Screens/User/Help/HelpScreen";
 import NotificationScreen from "./src/Screens/User/Notification/NotificationScreen";
 import NotificationDetailScreen from "./src/Screens/User/NotificationDetail/NotificationDetailScreen";
+import TechnicianBottomTabs from "./src/Navigation/TechnicianBottomTabs"
+
 
 const Stack = createStackNavigator();
 
@@ -43,9 +45,14 @@ export default function App() {
           component={WorkerDetailScreen}
           options={{ headerShown: false }}
         />
-        <Stack.Screen
+        {/* <Stack.Screen
           name="Main"
           component={BottomTabs}
+          options={{ headerShown: false }}
+        /> */}
+         <Stack.Screen
+          name="Main"
+          component={TechnicianBottomTabs}
           options={{ headerShown: false }}
         />
         <Stack.Screen
