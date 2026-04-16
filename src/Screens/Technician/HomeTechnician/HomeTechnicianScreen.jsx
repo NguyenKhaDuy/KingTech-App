@@ -78,7 +78,6 @@ export default function HomeTechnicianScreen() {
         {/* TITLE */}
         <Text style={styles.sectionTitle}>Công việc hôm nay</Text>
 
-        {/* JOB LIST */}
         <FlatList
           data={jobs}
           keyExtractor={(item) => item.id}
