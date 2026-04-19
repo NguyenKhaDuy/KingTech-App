@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,45 +6,96 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { showToast } from "../../utils/showToast";
 
 export default function LoginScreen() {
-  const navigation = useNavigation(); 
+  const navigation = useNavigation();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async () => {
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://192.168.1.6:8082/api/login/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const text = await res.text(); // đọc trước
+
+      if (!res.ok) {
+        throw new Error(text);
+      }
+
+      // parse JSON an toàn
+      const data = JSON.parse(text);
+
+      await AsyncStorage.setItem("token", data.token);
+      await AsyncStorage.setItem("user", JSON.stringify(data));
+
+      const roles = data.roles || [];
+
+      if (roles.includes("TECHNICIAN")) {
+        navigation.replace("TechnicianMain");
+        return;
+      }
+
+      if (roles.includes("CUSTOMER")) {
+        navigation.replace("CustomerMain");
+        return;
+      }
+
+    } catch (error) {
+      console.log("LOGIN ERROR:", error);
+      showToast("error", error.message || "Sai email hoặc mật khẩu")
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* LOGO */}
       <Image source={require("../../../assets/logo.png")} style={styles.logo} />
 
-      {/* TITLE */}
       <Text style={styles.title}>KingTech</Text>
       <Text style={styles.subtitle}>Welcome back 👋</Text>
 
-      {/* INPUT EMAIL */}
       <TextInput
         placeholder="Email"
         style={styles.input}
-        placeholderTextColor="#999"
+        value={email}
+        onChangeText={setEmail}
       />
 
-      {/* INPUT PASSWORD */}
       <TextInput
         placeholder="Password"
         secureTextEntry
         style={styles.input}
-        placeholderTextColor="#999"
+        value={password}
+        onChangeText={setPassword}
       />
 
-      {/* LOGIN BUTTON */}
-      <TouchableOpacity
-        style={styles.loginBtn}
-        onPress={() => navigation.replace("Main")}
-      >
-        <Text style={styles.loginText}>Login</Text>
+      <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
+        <Text style={styles.loginText}>
+          {loading ? "Loading..." : "Login"}
+        </Text>
       </TouchableOpacity>
 
-      {/* REGISTER */}
       <Text style={styles.footer}>
         Don’t have an account?{" "}
         <Text

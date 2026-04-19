@@ -7,11 +7,14 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { showToast } from "../../utils/showToast";
 
 export default function RegisterScreen() {
-  const navigation = useNavigation(); // ✅ chỉ dùng cái này
+  const navigation = useNavigation();
 
   const [form, setForm] = useState({
     full_name: "",
@@ -23,26 +26,93 @@ export default function RegisterScreen() {
     gender: "",
   });
 
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // DATE PICKER STATE
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [date, setDate] = useState(new Date());
+
   const handleChange = (key, value) => {
     setForm({ ...form, [key]: value });
   };
 
-  const handleRegister = () => {
-    console.log(form);
-    // 👉 call API ở đây
+  // HANDLE DATE CHANGE
+  const onChangeDate = (event, selectedDate) => {
+    setShowDatePicker(false);
+
+    if (selectedDate) {
+      setDate(selectedDate);
+
+      const formatted = selectedDate.toISOString().split("T")[0]; // YYYY-MM-DD
+      handleChange("dob", formatted);
+    }
+  };
+
+  const handleRegister = async () => {
+    setError("");
+
+    if (form.password !== confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp");
+      return;
+    }
+
+    const payload = {
+      full_name: form.full_name,
+      email: form.email,
+      phone_number: form.phone_number,
+      address: form.address,
+      password: form.password,
+      dob: form.dob,
+      gender: form.gender,
+    };
+
+    try {
+      setLoading(true);
+
+      const res = await fetch("http://192.168.1.6:8082/api/register/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(msg);
+      }
+
+      navigation.navigate("OtpScreen", {
+        email: form.email,
+        type: "REGISTER",
+      });
+    } catch (err) {
+      console.log("REGISTER ERROR:", err);
+      const msg = err.message || "Đăng ký thất bại";
+      setError(msg);
+      showToast("error", msg)
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView contentContainerStyle={styles.container}>
       {/* LOGO */}
-      <Image source={require("../../../assets/logo.png")} style={styles.logo} />
+      <Image
+        source={require("../../../assets/logo.png")}
+        style={styles.logo}
+      />
 
       {/* TITLE */}
       <Text style={styles.title}>Register</Text>
       <Text style={styles.subtitle}>Join KingTech</Text>
+
+      {/* ERROR */}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
       {/* INPUTS */}
       <TextInput
@@ -79,26 +149,56 @@ export default function RegisterScreen() {
       />
 
       <TextInput
-        placeholder="Date of Birth (YYYY-MM-DD)"
+        placeholder="Confirm Password"
+        secureTextEntry
         style={styles.input}
-        onChangeText={(val) => handleChange("dob", val)}
+        onChangeText={(val) => setConfirmPassword(val)}
       />
 
+      {/* DOB PICKER */}
+      <TouchableOpacity
+        style={styles.input}
+        onPress={() => setShowDatePicker(true)}
+      >
+        <Text style={{ color: form.dob ? "#000" : "#999" }}>
+          {form.dob || "Select Date of Birth"}
+        </Text>
+      </TouchableOpacity>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="date"
+          display="default"
+          onChange={onChangeDate}
+          maximumDate={new Date()}
+        />
+      )}
+
       <TextInput
-        placeholder="Gender (Male/Female)"
+        placeholder="Gender (MALE/FEMALE)"
         style={styles.input}
         onChangeText={(val) => handleChange("gender", val)}
       />
 
       {/* BUTTON */}
-      <TouchableOpacity style={styles.registerBtn} onPress={handleRegister}>
-        <Text style={styles.registerText}>Sign Up</Text>
+      <TouchableOpacity
+        style={[styles.registerBtn, loading && { opacity: 0.6 }]}
+        onPress={handleRegister}
+        disabled={loading}
+      >
+        <Text style={styles.registerText}>
+          {loading ? "Loading..." : "Sign Up"}
+        </Text>
       </TouchableOpacity>
 
-      {/* BACK TO LOGIN */}
+      {/* LOGIN */}
       <Text style={styles.footer}>
         Already have an account?{" "}
-        <Text style={styles.link} onPress={() => navigation.navigate("Login")}>
+        <Text
+          style={styles.link}
+          onPress={() => navigation.navigate("Login")}
+        >
           Login
         </Text>
       </Text>
@@ -106,10 +206,11 @@ export default function RegisterScreen() {
   );
 }
 
+/* STYLE */
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1, // ✅ QUAN TRỌNG
-    justifyContent: "center", // ✅ căn giữa dọc
+    flexGrow: 1,
+    justifyContent: "center",
     padding: 25,
     backgroundColor: "#fff",
   },
@@ -140,7 +241,6 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 12,
     marginBottom: 12,
-    fontSize: 15,
   },
 
   registerBtn: {
@@ -153,7 +253,6 @@ const styles = StyleSheet.create({
 
   registerText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
   },
 
@@ -166,5 +265,11 @@ const styles = StyleSheet.create({
   link: {
     color: "#ff6600",
     fontWeight: "bold",
+  },
+
+  error: {
+    color: "red",
+    textAlign: "center",
+    marginBottom: 10,
   },
 });
