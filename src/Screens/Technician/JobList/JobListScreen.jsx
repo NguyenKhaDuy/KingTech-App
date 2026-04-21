@@ -11,12 +11,18 @@ const data = [
     name: "Trần Thị Lụa",
     service: "Plumbing",
     status: "RECEIVED",
+   invoice: {
+      id_invoices: 102,
+    },
   },
   {
     id: "2",
     name: "Trần Thị Lụa",
     service: "Plumbing",
     status: "COMPLETED",
+    invoice: {
+      id_invoices: 101,
+    },
   },
 ];
 

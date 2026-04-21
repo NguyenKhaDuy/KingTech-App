@@ -1,13 +1,16 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useMemo } from "react";
 import { View, StyleSheet, TouchableOpacity, Animated } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 
 import HomeTechnicianScreen from "../Screens/Technician/HomeTechnician/HomeTechnicianScreen";
 import JobListScreen from "../Screens/Technician/JobList/JobListScreen";
+import NotificationTechScreen from "../Screens/Technician/NotificationTech/NotificationTechScreen";
+import TechnicianProfileScreen from "../Screens/Technician/TechnicianProfile/TechnicianProfileScreen";
 
 const Tab = createBottomTabNavigator();
 
+/* ===== NÚT GIỮA ===== */
 function ActionButton({ onPress }) {
   const scale = useRef(new Animated.Value(1)).current;
 
@@ -42,6 +45,18 @@ function ActionButton({ onPress }) {
 }
 
 export default function TechnicianTabs() {
+  /* ===== STATE NOTIFICATION ===== */
+  const [notifications, setNotifications] = useState([
+    { id: "1", isRead: false },
+    { id: "2", isRead: false },
+    { id: "3", isRead: true },
+  ]);
+
+  /* ===== ĐẾM CHƯA ĐỌC ===== */
+  const unreadCount = useMemo(() => {
+    return notifications.filter((n) => !n.isRead).length;
+  }, [notifications]);
+
   return (
     <View style={{ flex: 1, overflow: "visible" }}>
       <Tab.Navigator
@@ -63,7 +78,6 @@ export default function TechnicianTabs() {
 
             if (route.name === "HomeTech") icon = "home";
             else if (route.name === "Jobs") icon = "clipboard";
-            else if (route.name === "Action") icon = "";
             else if (route.name === "Noti") icon = "notifications";
             else if (route.name === "Profile") icon = "person";
 
@@ -87,8 +101,30 @@ export default function TechnicianTabs() {
           }}
         />
 
-        <Tab.Screen name="Noti" component={HomeTechnicianScreen} />
-        <Tab.Screen name="Profile" component={HomeTechnicianScreen} />
+        {/* 🔥 NOTIFICATION CÓ BADGE */}
+        <Tab.Screen
+          name="Noti"
+          options={{
+            tabBarBadge: unreadCount > 0 ? unreadCount : null,
+            tabBarBadgeStyle: {
+              backgroundColor: "#ff6600",
+              color: "#fff",
+              fontSize: 10,
+              minWidth: 18,
+              height: 18,
+            },
+          }}
+        >
+          {(props) => (
+            <NotificationTechScreen
+              {...props}
+              notifications={notifications}
+              setNotifications={setNotifications}
+            />
+          )}
+        </Tab.Screen>
+
+        <Tab.Screen name="Profile" component={TechnicianProfileScreen} />
       </Tab.Navigator>
     </View>
   );

@@ -20,7 +20,11 @@ export default function JobCard({ item }) {
       <View style={styles.divider} />
 
       {/* ACTION */}
-      <ActionButtons status={item.status} />
+      <ActionButtons
+        status={item.status}
+        orderId={item.id}
+        invoice={item.invoice}
+      />
     </View>
   );
 }

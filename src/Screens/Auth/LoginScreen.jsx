@@ -90,7 +90,7 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
 
-      <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
+      <TouchableOpacity style={styles.loginBtn} onPress={() => navigation.navigate("TechnicianMain")}>
         <Text style={styles.loginText}>
           {loading ? "Loading..." : "Login"}
         </Text>

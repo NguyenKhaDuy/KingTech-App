@@ -1,16 +1,33 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 
-export default function ActionButtons({ status }) {
+export default function ActionButtons({ status, orderId, invoice }) {
+  const navigation = useNavigation();
   return (
     <View style={styles.row}>
-      <TouchableOpacity style={styles.btn}>
+      <TouchableOpacity
+        style={styles.btn}
+        onPress={() => {
+          navigation.navigate("RequestTechDetail", {
+            orderId: orderId,
+          });
+        }}
+      >
         <Ionicons name="eye-outline" size={16} />
         <Text style={styles.text}>Chi tiết</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.btn, styles.primary]}>
+      <TouchableOpacity
+        style={[styles.btn, styles.primary]}
+        onPress={() => {
+          navigation.navigate("UpdateRequestStatus", {
+            orderId: orderId,
+            currentStatus: status,
+          });
+        }}
+      >
         <Ionicons name="create-outline" size={16} color="#fff" />
         <Text style={[styles.text, styles.whiteText]}>Cập nhật</Text>
       </TouchableOpacity>
@@ -22,11 +39,14 @@ export default function ActionButtons({ status }) {
           status === "COMPLETED" ? styles.orange : styles.disabled,
         ]}
         disabled={status !== "COMPLETED"}
+        onPress={() => {
+          navigation.navigate("InvoiceCreate", {
+            orderId: orderId,
+          });
+        }}
       >
         <Ionicons name="document-text-outline" size={16} color="#fff" />
-        <Text style={[styles.text, styles.whiteText]}>
-          Tạo HĐ
-        </Text>
+        <Text style={[styles.text, styles.whiteText]}>Tạo HĐ</Text>
       </TouchableOpacity>
 
       {/* XEM HÓA ĐƠN */}
@@ -36,11 +56,14 @@ export default function ActionButtons({ status }) {
           status === "COMPLETED" ? styles.green : styles.disabled,
         ]}
         disabled={status !== "COMPLETED"}
+        onPress={() => {
+          navigation.navigate("InvoiceTechDetail", {
+            invoiceId: invoice.id_invoices,
+          });
+        }}
       >
         <Ionicons name="receipt-outline" size={16} color="#fff" />
-        <Text style={[styles.text, styles.whiteText]}>
-          Xem HĐ
-        </Text>
+        <Text style={[styles.text, styles.whiteText]}>Xem HĐ</Text>
       </TouchableOpacity>
     </View>
   );

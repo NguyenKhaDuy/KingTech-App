@@ -20,6 +20,13 @@ import HelpScreen from "./src/Screens/User/Help/HelpScreen";
 import NotificationScreen from "./src/Screens/User/Notification/NotificationScreen";
 import NotificationDetailScreen from "./src/Screens/User/NotificationDetail/NotificationDetailScreen";
 import TechnicianBottomTabs from "./src/Navigation/TechnicianBottomTabs";
+import InvoiceCreateScreen from "./src/Screens/Technician/InvoiceCreate/InvoiceCreateScreen";
+import InvoiceDetailTechScreen from "./src/Screens/Technician/InvoiceDetail/InvoiceDetailTechScreen ";
+import RequestTechDetailScreen from "./src/Screens/Technician/RequestTechDetail/RequestTechDetailScreen";
+import UpdateRequestStatusScreen from "./src/Screens/Technician/UpdateRequestStatus/UpdateRequestStatusScreen";
+import NotificationTechDetailScreen from "./src/Screens/Technician/NotificationTechDetail/NotificationTechDetailScreen";
+import TechSkillManagerScreen from "./src/Screens/Technician/TechSkillManager/TechSkillManagerScreen";
+import TechLocationManagerScreen from "./src/Screens/Technician/TechLocationManager/TechLocationManagerScreen";
 
 const Stack = createStackNavigator();
 
@@ -34,26 +41,125 @@ export default function App() {
     <>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Intro">
-          <Stack.Screen name="Intro" component={IntroScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Register" component={RegisterScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="WorkerDetail" component={WorkerDetailScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="CustomerMain" component={BottomTabs} options={{ headerShown: false }} />
-          <Stack.Screen name="TechnicianMain" component={TechnicianBottomTabs} options={{ headerShown: false }} />
-          <Stack.Screen name="InvoiceDetail" component={InvoiceDetailScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="RequestDetail" component={RequestDetailScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="ReviewScreen" component={ReviewScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="OtpScreen" component={OtpScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Help" component={HelpScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="NotificationScreen" component={NotificationScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="NotificationDetail" component={NotificationDetailScreen} options={{ headerShown: false }} />
+          <Stack.Screen
+            name="Intro"
+            component={IntroScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Register"
+            component={RegisterScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="WorkerDetail"
+            component={WorkerDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="CustomerMain"
+            component={BottomTabs}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TechnicianMain"
+            component={TechnicianBottomTabs}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="InvoiceDetail"
+            component={InvoiceDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="RequestDetail"
+            component={RequestDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ReviewScreen"
+            component={ReviewScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="EditProfile"
+            component={EditProfileScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ChangePassword"
+            component={ChangePasswordScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="OtpScreen"
+            component={OtpScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ChangeEmail"
+            component={ChangeEmailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Help"
+            component={HelpScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="NotificationScreen"
+            component={NotificationScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="NotificationDetail"
+            component={NotificationDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="InvoiceCreate"
+            component={InvoiceCreateScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="InvoiceTechDetail"
+            component={InvoiceDetailTechScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="RequestTechDetail"
+            component={RequestTechDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="UpdateRequestStatus"
+            component={UpdateRequestStatusScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="NotificationTechDetail"
+            component={NotificationTechDetailScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TechSkillManage"
+            component={TechSkillManagerScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TechLocationManage"
+            component={TechLocationManagerScreen}
+            options={{ headerShown: false }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
+      
 
-      {/* ✅ TOAST GLOBAL RENDER */}
       <Toast ref={toastRef} />
     </>
   );
