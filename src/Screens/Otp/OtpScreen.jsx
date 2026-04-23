@@ -17,7 +17,7 @@ export default function OtpScreen() {
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(300);
-  const [loading, setLoading] = useState(false); // ✅ FIX MISSING STATE
+  const [loading, setLoading] = useState(false); 
 
   const inputs = useRef([]);
 
@@ -55,7 +55,7 @@ export default function OtpScreen() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://192.168.1.6:8082/api/verify-otp/", {
+      const res = await fetch("http://10.0.2.2:8082/api/verify-otp/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -90,7 +90,7 @@ export default function OtpScreen() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://192.168.1.6:8082/api/resend-otp/", {
+      const res = await fetch("http:/10.0.2.2:8082/api/resend-otp/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

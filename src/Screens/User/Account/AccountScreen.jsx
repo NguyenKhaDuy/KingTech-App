@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { disconnectWebSocket } from "../../../utils/stompClient";
 
 export default function AccountScreen({ navigation }) {
   const [avatar, setAvatar] = useState("https://i.pravatar.cc/150");
@@ -31,6 +33,25 @@ export default function AccountScreen({ navigation }) {
 
     if (!result.canceled) {
       setAvatar(result.assets[0].uri);
+    }
+  };
+
+  const handleLogout = async (navigation) => {
+    try {
+      // Xóa dữ liệu
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("user");
+
+      // Ngắt websocket
+      disconnectWebSocket && disconnectWebSocket();
+
+      // Quay về màn login (reset stack luôn)
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+    } catch (error) {
+      console.log("LOGOUT ERROR:", error);
     }
   };
 
@@ -67,15 +88,26 @@ export default function AccountScreen({ navigation }) {
           onPress={() => navigation.navigate("ChangePassword")}
         />
 
-        <MenuItem icon="mail-outline" title="Đổi email" onPress={() => navigation.navigate("ChangeEmail")} />
+        <MenuItem
+          icon="mail-outline"
+          title="Đổi email"
+          onPress={() => navigation.navigate("ChangeEmail")}
+        />
 
-        <MenuItem icon="help-circle-outline" title="Trợ giúp" onPress={() => navigation.navigate("Help")} />
+        <MenuItem
+          icon="help-circle-outline"
+          title="Trợ giúp"
+          onPress={() => navigation.navigate("Help")}
+        />
 
         <MenuItem icon="settings-outline" title="Cài đặt" />
       </View>
 
       {/* LOGOUT */}
-      <TouchableOpacity style={styles.logoutBtn}>
+      <TouchableOpacity
+        style={styles.logoutBtn}
+        onPress={() => handleLogout(navigation)}
+      >
         <Ionicons name="log-out-outline" size={20} color="#ff4444" />
         <Text style={styles.logoutText}>Logout</Text>
       </TouchableOpacity>

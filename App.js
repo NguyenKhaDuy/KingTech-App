@@ -27,6 +27,7 @@ import UpdateRequestStatusScreen from "./src/Screens/Technician/UpdateRequestSta
 import NotificationTechDetailScreen from "./src/Screens/Technician/NotificationTechDetail/NotificationTechDetailScreen";
 import TechSkillManagerScreen from "./src/Screens/Technician/TechSkillManager/TechSkillManagerScreen";
 import TechLocationManagerScreen from "./src/Screens/Technician/TechLocationManager/TechLocationManagerScreen";
+import StartScreen from "./src/Screens/StartScreen/StartScreen";
 
 const Stack = createStackNavigator();
 
@@ -36,11 +37,13 @@ export default function App() {
   useEffect(() => {
     setToastRef(toastRef.current);
   }, []);
+  
 
   return (
     <>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Intro">
+        <Stack.Navigator initialRouteName="StartScreen">
+          <Stack.Screen name="StartScreen" component={StartScreen} />
           <Stack.Screen
             name="Intro"
             component={IntroScreen}

@@ -52,3 +52,17 @@ export function addWebSocketListener(callback) {
     globalListeners = globalListeners.filter((fn) => fn !== callback);
   };
 }
+
+export function disconnectWebSocket() {
+  if (stompClient) {
+    try {
+      stompClient.deactivate(); // đóng kết nối STOMP
+      console.log("🔌 STOMP DISCONNECTED");
+    } catch (err) {
+      console.log("❌ Error disconnecting WS:", err);
+    }
+  }
+
+  stompClient = null;
+  globalListeners = []; // clear luôn listener để tránh duplicate
+}
