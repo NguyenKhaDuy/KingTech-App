@@ -11,6 +11,7 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { showToast } from "../../utils/showToast";
 import { connectWebSocket } from "../../utils/stompClient";
+import { FontAwesome } from "@expo/vector-icons";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -89,6 +90,14 @@ export default function LoginScreen() {
         <Text style={styles.loginText}>{loading ? "Loading..." : "Login"}</Text>
       </TouchableOpacity>
 
+      <TouchableOpacity style={styles.googleBtn}>
+        <Image
+          source={require("../../../assets/google.png")}
+          style={styles.googleIcon}
+        />
+        <Text style={styles.googleText}>Continue with Google</Text>
+      </TouchableOpacity>
+
       <Text style={styles.footer}>
         Don’t have an account?{" "}
         <Text
@@ -140,4 +149,37 @@ const styles = StyleSheet.create({
   loginText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   footer: { textAlign: "center", marginTop: 20, color: "#777" },
   link: { color: "#ff6600", fontWeight: "bold" },
+  googleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 15,
+
+    // shadow iOS
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+
+    // Android
+    elevation: 3,
+  },
+
+  googleIcon: {
+    width: 22,
+    height: 22,
+    marginRight: 10,
+    resizeMode: "contain",
+  },
+
+  googleText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#444",
+  },
 });
