@@ -9,6 +9,7 @@ import {
 import AppIntroSlider from "react-native-app-intro-slider";
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const slides = [
   {
@@ -38,7 +39,13 @@ const slides = [
 export default function IntroScreen({ navigation }) {
   const sliderRef = useRef(null);
 
-  const onDone = () => {
+  const onDone = async () => {
+    await AsyncStorage.setItem("hasSeenIntro", "true");
+    navigation.replace("Login");
+  };
+
+  const onSkip = async () => {
+    await AsyncStorage.setItem("hasSeenIntro", "true");
     navigation.replace("Login");
   };
 
@@ -50,7 +57,7 @@ export default function IntroScreen({ navigation }) {
           style={styles.overlay}
         >
           <View style={styles.content}>
-            {/* ICON đẹp hơn */}
+            {/* ICON */}
             <View style={styles.iconWrapper}>
               <Icon name={item.icon} size={36} color="#ff6600" />
             </View>
@@ -69,7 +76,7 @@ export default function IntroScreen({ navigation }) {
     );
   };
 
-  // ✅ FIX: align chuẩn với skip
+  // NEXT BUTTON
   const renderNextButton = () => (
     <View style={styles.navBtn}>
       <View style={styles.nextBtn}>
@@ -78,10 +85,11 @@ export default function IntroScreen({ navigation }) {
     </View>
   );
 
+  // SKIP BUTTON (FIXED)
   const renderSkipButton = () => (
-    <View style={styles.navBtn}>
+    <TouchableOpacity style={styles.navBtn} onPress={onSkip}>
       <Text style={styles.skip}>Bỏ qua</Text>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -89,7 +97,8 @@ export default function IntroScreen({ navigation }) {
       ref={sliderRef}
       data={slides}
       renderItem={renderItem}
-      onSkip={onDone}
+      onSkip={onSkip}
+      onDone={onDone}
       showSkipButton
       renderNextButton={renderNextButton}
       renderSkipButton={renderSkipButton}
@@ -116,7 +125,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 
-  // ✅ ICON STYLE XỊN HƠN
   iconWrapper: {
     width: 80,
     height: 80,
@@ -126,7 +134,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
 
-    // shadow
     shadowColor: "#000",
     shadowOpacity: 0.25,
     shadowRadius: 10,
@@ -162,15 +169,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  // ✅ FIX ALIGN
   navBtn: {
     justifyContent: "center",
     alignItems: "center",
-    height: 50, // 👉 ép cùng chiều cao để không lệch
+    height: 50,
     paddingHorizontal: 20,
   },
 
-  // ✅ NEXT BUTTON XỊN HƠN
   nextBtn: {
     width: 42,
     height: 42,

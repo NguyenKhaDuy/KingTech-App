@@ -28,7 +28,7 @@ export default function HomeScreen({ navigation }) {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* ✅ dùng đúng state */}
+      {/*dùng đúng state */}
       <Header navigation={navigation} unreadCount={unreadCount} />
 
       <Banner />
