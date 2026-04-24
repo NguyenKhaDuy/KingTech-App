@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { showToast } from "../../utils/showToast";
 import { connectWebSocket } from "../../utils/stompClient";
-import { FontAwesome } from "@expo/vector-icons";
+
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -20,6 +21,15 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // ================= GOOGLE CONFIG =================
+  useEffect(() => {
+    GoogleSignin.configure({
+      webClientId:
+        "706771451235-6fbp4gohpvu5tjtc47gc0jigdnv1beh1.apps.googleusercontent.com",
+    });
+  }, []);
+
+  // ================= EMAIL LOGIN =================
   const handleLogin = async () => {
     try {
       setLoading(true);
@@ -32,38 +42,75 @@ export default function LoginScreen() {
         body: JSON.stringify({ email, password }),
       });
 
-      const text = await res.text();
+      const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(text);
-      }
-
-      const data = JSON.parse(text);
-
-      //lưu token
       await AsyncStorage.setItem("token", data.token);
       await AsyncStorage.setItem("user", JSON.stringify(data));
 
-      //CONNECT SOCKET NGAY SAU LOGIN
-      const client = connectWebSocket(data.token);
+      connectWebSocket(data.token);
 
-      setTimeout(() => {
-        const roles = data.roles || [];
-
-        if (roles.includes("TECHNICIAN")) {
-          navigation.replace("TechnicianMain");
-        } else {
-          navigation.replace("CustomerMain");
-        }
-      }, 500);
+      if (data.roles?.includes("TECHNICIAN")) {
+        navigation.replace("TechnicianMain");
+      } else {
+        navigation.replace("CustomerMain");
+      }
     } catch (error) {
-      console.log("LOGIN ERROR:", error);
-      showToast("error", error.message || "Sai email hoặc mật khẩu");
+      console.log(error);
+      showToast("error", "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
+  // ================= GOOGLE LOGIN =================
+  const handleGoogleLogin = async () => {
+    try {
+      await GoogleSignin.hasPlayServices();
+
+      const response = await GoogleSignin.signIn();
+
+      const idToken = response.data?.idToken;
+
+      console.log(response)
+
+      if (!idToken) {
+        showToast("error", "Không lấy được Google token");
+        return;
+      }
+
+      const res = await fetch("http://10.0.2.2:8082/api/auth/google-login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          token: idToken
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("Backend login failed");
+      }
+
+      const data = await res.json();
+
+      await AsyncStorage.setItem("token", data.token);
+      await AsyncStorage.setItem("user", JSON.stringify(data));
+
+      connectWebSocket(data.token);
+
+      if (data.roles?.includes("TECHNICIAN")) {
+        navigation.replace("TechnicianMain");
+      } else {
+        navigation.replace("CustomerMain");
+      }
+    } catch (error) {
+      console.log("GOOGLE ERROR:", error);
+      showToast("error", "Google login failed");
+    }
+  };
+
+  // ================= UI =================
   return (
     <View style={styles.container}>
       <Image source={require("../../../assets/logo.png")} style={styles.logo} />
@@ -86,11 +133,13 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
 
+      {/* LOGIN BUTTON */}
       <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
         <Text style={styles.loginText}>{loading ? "Loading..." : "Login"}</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.googleBtn}>
+      {/* GOOGLE BUTTON */}
+      <TouchableOpacity style={styles.googleBtn} onPress={handleGoogleLogin}>
         <Image
           source={require("../../../assets/google.png")}
           style={styles.googleIcon}
@@ -111,6 +160,7 @@ export default function LoginScreen() {
   );
 }
 
+// ================= STYLE =================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -131,7 +181,11 @@ const styles = StyleSheet.create({
     color: "#ff6600",
     textAlign: "center",
   },
-  subtitle: { textAlign: "center", color: "#777", marginBottom: 30 },
+  subtitle: {
+    textAlign: "center",
+    color: "#777",
+    marginBottom: 30,
+  },
   input: {
     backgroundColor: "#f5f5f5",
     padding: 15,
@@ -146,9 +200,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 10,
   },
-  loginText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  footer: { textAlign: "center", marginTop: 20, color: "#777" },
-  link: { color: "#ff6600", fontWeight: "bold" },
+  loginText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   googleBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -159,27 +215,25 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     marginTop: 15,
-
-    // shadow iOS
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 2 },
-
-    // Android
     elevation: 3,
   },
-
   googleIcon: {
     width: 22,
     height: 22,
     marginRight: 10,
-    resizeMode: "contain",
   },
-
   googleText: {
     fontSize: 16,
     fontWeight: "500",
     color: "#444",
+  },
+  footer: {
+    textAlign: "center",
+    marginTop: 20,
+    color: "#777",
+  },
+  link: {
+    color: "#ff6600",
+    fontWeight: "bold",
   },
 });
