@@ -26,6 +26,8 @@ export default function LoginScreen() {
     GoogleSignin.configure({
       webClientId:
         "706771451235-6fbp4gohpvu5tjtc47gc0jigdnv1beh1.apps.googleusercontent.com",
+      offlineAccess: true,
+      forceCodeForRefreshToken: true,
     });
   }, []);
 
@@ -34,7 +36,7 @@ export default function LoginScreen() {
     try {
       setLoading(true);
 
-      const res = await fetch("http://192.168.1.10:8082/api/login/", {
+      const res = await fetch("http://10.0.2.2:8082/api/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -67,11 +69,13 @@ export default function LoginScreen() {
     try {
       await GoogleSignin.hasPlayServices();
 
+      await GoogleSignin.signOut();
+
       const response = await GoogleSignin.signIn();
 
       const idToken = response.data?.idToken;
 
-      console.log(response)
+      console.log(response);
 
       if (!idToken) {
         showToast("error", "Không lấy được Google token");
@@ -81,10 +85,10 @@ export default function LoginScreen() {
       const res = await fetch("http://10.0.2.2:8082/api/auth/google-login", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          token: idToken
+          token: idToken,
         }),
       });
 

@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from "react";
+import { ScrollView, StyleSheet } from "react-native";
 
-import Header from '../../../Components/User/Home/Header';
-import Banner from '../../../Components/User/Home/Banner';
-import Services from '../../../Components/User/Home/Services';
-import TechnicianList from '../../../Components/User/Home/TechnicianList';
+import Header from "../../../Components/User/Home/Header";
+import Banner from "../../../Components/User/Home/Banner";
+import Services from "../../../Components/User/Home/Services";
+import TechnicianList from "../../../Components/User/Home/TechnicianList";
 
 import { addWebSocketListener } from "../../../utils/stompClient";
 
@@ -14,17 +14,24 @@ export default function HomeScreen({ navigation }) {
 
   /* ===== LISTEN SOCKET ===== */
   useEffect(() => {
-  console.log("🟢 HomeScreen mounted");
+    console.log("🟢 HomeScreen mounted");
 
-  const unsubscribe = addWebSocketListener((data) => {
-    console.log("📩 NOTIFICATION RECEIVED:", data);
+    let isActive = true;
 
-    setNotifications((prev) => [data, ...prev]);
-    setUnreadCount((prev) => prev + 1);
-  });
+    const unsubscribe = addWebSocketListener((data) => {
+      if (!isActive) return;
 
-  return () => unsubscribe();
-}, []);
+      console.log("📩 NOTIFICATION RECEIVED:", data);
+
+      setNotifications((prev) => [data, ...prev]);
+      setUnreadCount((prev) => prev + 1);
+    });
+
+    return () => {
+      isActive = false;
+      unsubscribe();
+    };
+  }, []);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -41,7 +48,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f4f7',
+    backgroundColor: "#f2f4f7",
     padding: 20,
   },
 });

@@ -43,7 +43,7 @@ export default function AccountScreen({ navigation }) {
       await AsyncStorage.removeItem("user");
 
       // Ngắt websocket
-      disconnectWebSocket && disconnectWebSocket();
+      disconnectWebSocket();
 
       // Quay về màn login (reset stack luôn)
       navigation.reset({

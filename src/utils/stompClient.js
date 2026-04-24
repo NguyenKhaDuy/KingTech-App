@@ -8,7 +8,7 @@ export function connectWebSocket(token) {
   if (stompClient?.connected) return stompClient;
 
   stompClient = new Client({
-    webSocketFactory: () => new WebSocket("ws://192.168.1.10:8082/ws"),
+    webSocketFactory: () => new WebSocket("ws://10.0.2.2:8082/ws"),
 
     connectHeaders: {
       Authorization: `Bearer ${token}`,
@@ -19,20 +19,19 @@ export function connectWebSocket(token) {
     reconnectDelay: 5000,
 
     onConnect: () => {
-      console.log("🔥 STOMP CONNECTED");
+      console.log("STOMP CONNECTED");
 
-      // 🔥 THÊM ĐOẠN NÀY (QUAN TRỌNG NHẤT)
       stompClient.subscribe("/user/queue/notify", (msg) => {
         const data = JSON.parse(msg.body);
 
-        console.log("📩 WS RAW:", data);
+        console.log("WS RAW:", data);
 
         globalListeners.forEach(fn => fn(data));
       });
     },
 
     onStompError: (err) => {
-      console.log("❌ STOMP ERROR", err);
+      console.log("STOMP ERROR", err);
     },
   });
 
@@ -53,16 +52,24 @@ export function addWebSocketListener(callback) {
   };
 }
 
-export function disconnectWebSocket() {
-  if (stompClient) {
-    try {
-      stompClient.deactivate(); // đóng kết nối STOMP
-      console.log("🔌 STOMP DISCONNECTED");
-    } catch (err) {
-      console.log("❌ Error disconnecting WS:", err);
-    }
-  }
+export async function disconnectWebSocket() {
+  try {
+    // 1. XÓA LISTENER TRƯỚC
+    globalListeners = [];
 
-  stompClient = null;
-  globalListeners = []; // clear luôn listener để tránh duplicate
+    // 2. CHẶN RECONNECT
+    if (stompClient) {
+      stompClient.reconnectDelay = 0; // QUAN TRỌNG: stop auto reconnect
+
+      // 3. DEACTIVATE SOCKET
+      await stompClient.deactivate();
+
+      console.log("STOMP DISCONNECTED");
+    }
+
+    // 4. NULL HOÀN TOÀN
+    stompClient = null;
+  } catch (err) {
+    console.log("WS disconnect error:", err);
+  }
 }
