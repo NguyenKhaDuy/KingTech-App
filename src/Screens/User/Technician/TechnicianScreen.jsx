@@ -170,7 +170,7 @@ export default function TechnicianScreen({ navigation }) {
             />
           </View>
 
-          {/* 🔥 SKILL FILTER */}
+          {/*SKILL FILTER */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -198,7 +198,7 @@ export default function TechnicianScreen({ navigation }) {
             ))}
           </ScrollView>
 
-          {/* 🔥 SERVICE FILTER */}
+          {/*SERVICE FILTER */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
