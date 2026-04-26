@@ -1,9 +1,33 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import axios from 'axios';
 import TechnicianCard from '../Home/TechnicianCard';
 
 export default function TechnicianList({ navigation }) {
-  const data = [1, 2, 3];
+  const [technicians, setTechnicians] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTechnicians = async () => {
+      try {
+        const res = await axios.get(
+          `http://10.0.2.2:8082/api/outstanding/technician/`
+        );
+
+        setTechnicians(res.data.data);
+      } catch (error) {
+        console.error('Fetch technicians error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTechnicians();
+  }, []);
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#ff6600" />;
+  }
 
   return (
     <>
@@ -12,8 +36,12 @@ export default function TechnicianList({ navigation }) {
         <Text style={styles.viewAll}>View all</Text>
       </View>
 
-      {data.map((item) => (
-        <TechnicianCard key={item} item={item} navigation={navigation} />
+      {technicians.map((item) => (
+        <TechnicianCard
+          key={item.id_user}
+          item={item}
+          navigation={navigation}
+        />
       ))}
     </>
   );

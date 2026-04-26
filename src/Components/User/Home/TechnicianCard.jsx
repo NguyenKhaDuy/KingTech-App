@@ -13,20 +13,32 @@ export default function TechnicianCard({ item, navigation }) {
       style={styles.card}
       onPress={() =>
         navigation.navigate('WorkerDetail', {
-          id: item,
-          name: `Technician ${item}`,
-          avatar: `https://i.pravatar.cc/300?img=${item}`,
+          id: item.id_user,
+          name: item.full_name,
+          avatar: `data:image/jpeg;base64,${item.avatarBase64}`,
         })
       }
     >
       <Image
-        source={{ uri: `https://i.pravatar.cc/150?img=${item}` }}
+        source={{
+          uri: `data:image/jpeg;base64,${item.avatarBase64}`,
+        }}
         style={styles.avatar}
       />
 
       <View style={{ flex: 1 }}>
-        <Text style={styles.name}>Technician {item}</Text>
+        <Text style={styles.name}>{item.full_name}</Text>
         <Text style={styles.job}>Professional Repair</Text>
+
+        {/* Stars */}
+        <View style={{ flexDirection: 'row', marginTop: 4 }}>
+          {[...Array(item.total_star)].map((_, i) => (
+            <Text key={i} style={{ color: '#FFD700' }}>★</Text>
+          ))}
+          {[...Array(5 - item.total_star)].map((_, i) => (
+            <Text key={i} style={{ color: '#ccc' }}>★</Text>
+          ))}
+        </View>
       </View>
 
       <TouchableOpacity style={styles.btn}>
