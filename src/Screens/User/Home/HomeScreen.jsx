@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { ScrollView, StyleSheet } from "react-native";
 
 import Header from "../../../Components/User/Home/Header";
@@ -7,31 +7,10 @@ import Services from "../../../Components/User/Home/Services";
 import TechnicianList from "../../../Components/User/Home/TechnicianList";
 
 import { addWebSocketListener } from "../../../utils/stompClient";
+import { NotificationContext } from "../../../Contexts/NotificationProvider ";
 
 export default function HomeScreen({ navigation }) {
-  const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  /* ===== LISTEN SOCKET ===== */
-  useEffect(() => {
-    console.log("🟢 HomeScreen mounted");
-
-    let isActive = true;
-
-    const unsubscribe = addWebSocketListener((data) => {
-      if (!isActive) return;
-
-      console.log("📩 NOTIFICATION RECEIVED:", data);
-
-      setNotifications((prev) => [data, ...prev]);
-      setUnreadCount((prev) => prev + 1);
-    });
-
-    return () => {
-      isActive = false;
-      unsubscribe();
-    };
-  }, []);
+   const { unreadCount } = useContext(NotificationContext);
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>

@@ -28,6 +28,10 @@ import NotificationTechDetailScreen from "./src/Screens/Technician/NotificationT
 import TechSkillManagerScreen from "./src/Screens/Technician/TechSkillManager/TechSkillManagerScreen";
 import TechLocationManagerScreen from "./src/Screens/Technician/TechLocationManager/TechLocationManagerScreen";
 import StartScreen from "./src/Screens/StartScreen/StartScreen";
+import { NotificationProvider } from "./src/Contexts/NotificationProvider ";
+import "./src/Contexts/NotificationHandler";
+import { Platform } from "react-native";
+import * as Notifications from "expo-notifications";
 
 const Stack = createStackNavigator();
 
@@ -37,10 +41,30 @@ export default function App() {
   useEffect(() => {
     setToastRef(toastRef.current);
   }, []);
-  
+
+  useEffect(() => {
+    const setup = async () => {
+      const { status } = await Notifications.requestPermissionsAsync();
+      console.log("Permission:", status);
+    };
+
+    setup();
+  }, []);
+
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      Notifications.setNotificationChannelAsync("default", {
+        name: "default",
+        importance: Notifications.AndroidImportance.MAX,
+        sound: true,
+        vibrationPattern: [0, 250, 250, 250],
+        icon: "notification-icon",
+      });
+    }
+  }, []);
 
   return (
-    <>
+    <NotificationProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="StartScreen">
           <Stack.Screen name="StartScreen" component={StartScreen} />
@@ -161,9 +185,8 @@ export default function App() {
           />
         </Stack.Navigator>
       </NavigationContainer>
-      
 
       <Toast ref={toastRef} />
-    </>
+    </NotificationProvider>
   );
 }
