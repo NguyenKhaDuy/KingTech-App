@@ -1,7 +1,13 @@
-import React from "react";
-import { View, ScrollView, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  ScrollView,
+  StyleSheet,
+  ActivityIndicator,
+  TouchableOpacity,
+  Text,
+} from "react-native";
 
-import HeaderImage from "../../../Components/User/WokerDetail/HeaderImage";
 import ProfileInfo from "../../../Components/User/WokerDetail/ProfileInfo";
 import JobInfo from "../../../Components/User/WokerDetail/JobInfo";
 import Skills from "../../../Components/User/WokerDetail/Skills";
@@ -9,63 +15,158 @@ import Services from "../../../Components/User/WokerDetail/Services";
 import Schedule from "../../../Components/User/WokerDetail/Schedule";
 import Reviews from "../../../Components/User/WokerDetail/Reviews";
 import BookingButton from "../../../Components/User/WokerDetail/BookingButton";
+
 import { SafeAreaView } from "react-native-safe-area-context";
-import { TouchableOpacity, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
 
 export default function WorkerDetailScreen({ route, navigation }) {
-  const { name, avatar } = route.params;
+  const { id } = route.params;
 
-  const schedule = [
-    { day: "Thứ 2", time: "08:00 - 17:00" },
-    { day: "Thứ 3", time: "08:00 - 17:00" },
-    { day: "Thứ 4", time: "08:00 - 17:00" },
-    { day: "Thứ 5", time: "08:00 - 17:00" },
-    { day: "Thứ 6", time: "08:00 - 17:00" },
-    { day: "Thứ 7", time: "08:00 - 12:00" },
-    { day: "Chủ nhật", time: "Nghỉ" },
-  ];
+  const [techData, setTechData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const skills = ["Điện dân dụng", "Sửa ổ cắm", "Lắp đặt đèn", "Bảo trì"];
+  // ================= FETCH API =================
+  useEffect(() => {
+    const fetchDetail = async () => {
+      try {
+        const res = await axios.get(
+          `http://10.0.2.2:8082/api/detail-technician/id=${id}`
+        );
 
-  const services = [
-    { icon: "🔌", name: "Sửa điện tại nhà" },
-    { icon: "💡", name: "Lắp đặt đèn" },
-    { icon: "🛠", name: "Bảo trì hệ thống" },
-    { icon: "🏠", name: "Sửa chữa tại nhà" },
-  ];
+        setTechData(res.data.data);
+      } catch (err) {
+        console.error("Fetch detail error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchDetail();
+  }, [id]);
+
+  // ================= CHECK ONLINE =================
+  const isWorkingNow = (schedules = []) => {
+    const now = new Date();
+
+    return schedules.some((s) => {
+      try {
+        let date;
+
+        if (Array.isArray(s.date)) {
+          const [y, m, d] = s.date;
+          date = new Date(y, m - 1, d);
+        } else if (typeof s.date === "string" && /^\d{8}$/.test(s.date)) {
+          const y = s.date.slice(0, 4);
+          const m = s.date.slice(4, 6);
+          const d = s.date.slice(6, 8);
+          date = new Date(`${y}-${m}-${d}`);
+        } else {
+          date = new Date(s.date);
+        }
+
+        if (isNaN(date)) return false;
+
+        const getTime = (t) => {
+          if (typeof t === "string") {
+            const clean = t.replace(/,/g, ":");
+            const [h, m] = clean.split(":");
+            return { h: +h, m: +m };
+          }
+
+          if (Array.isArray(t)) {
+            return { h: t[0], m: t[1] };
+          }
+
+          if (typeof t === "object") {
+            return { h: t.hour || 0, m: t.minute || 0 };
+          }
+
+          return { h: 0, m: 0 };
+        };
+
+        const start = getTime(s.time_start);
+        const end = getTime(s.time_end);
+
+        const startDate = new Date(date);
+        startDate.setHours(start.h, start.m, 0);
+
+        const endDate = new Date(date);
+        endDate.setHours(end.h, end.m, 0);
+
+        return now >= startDate && now <= endDate;
+      } catch {
+        return false;
+      }
+    });
+  };
+
+  // ================= LOADING =================
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#ff6600" />
+      </View>
+    );
+  }
+
+  if (!techData) {
+    return (
+      <View style={styles.center}>
+        <Text>Không có dữ liệu</Text>
+      </View>
+    );
+  }
+
+  const isOnline = isWorkingNow(
+    techData.technicianScheduleDTOS || []
+  );
+
+  // ================= UI =================
   return (
-    <SafeAreaView
-      edges={["top"]}
-      style={{ flex: 1, backgroundColor: "#ff6600" }}
-    >
+    <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: "#ff6600" }}>
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color="#fff" />
         </TouchableOpacity>
 
-        <Text style={styles.title}>{name}</Text>
+        <View style={{ alignItems: "center" }}>
+          <Text style={styles.title}>{techData.full_name}</Text>
+        </View>
 
         <View style={{ width: 22 }} />
       </View>
 
       {/* BODY */}
       <View style={{ flex: 1, backgroundColor: "#ff6600" }}>
-        <ScrollView
-          style={{ backgroundColor: "transparent" }}
-          contentContainerStyle={{ paddingBottom: 80 }}
-        >
-          {/* <HeaderImage avatar={avatar} /> */}
-
+        <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
           <View style={styles.content}>
-            <ProfileInfo name={name} avatar={avatar} />
-            <JobInfo />
-            <Skills skills={skills} />
-            <Services services={services} />
-            <Schedule schedule={schedule} />
-            <Reviews />
+
+            <ProfileInfo
+              name={techData.full_name}
+              avatar={`data:image/jpeg;base64,${techData.avatarBase64}`}
+              isOnline={isOnline}
+              tech={techData}
+            />
+
+            <JobInfo tech={techData}/>
+
+            <Skills
+              skills={techData.nameSkillTechnician || []}
+            />
+
+            <Services
+              services={techData.technicianServiceDTOS || []}
+            />
+
+            <Schedule
+              schedules={techData.technicianScheduleDTOS || []}
+            />
+
+            <Reviews
+              ratings={techData.ratingDTOS || []}
+            />
           </View>
         </ScrollView>
 
@@ -75,10 +176,15 @@ export default function WorkerDetailScreen({ route, navigation }) {
   );
 }
 
+// ================= STYLE =================
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   header: {
-    // backgroundColor: "#ff6600",
     paddingHorizontal: 20,
     paddingVertical: 15,
     flexDirection: "row",
@@ -91,13 +197,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
   },
+
   content: {
     padding: 16,
     marginTop: 10,
-
     backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    overflow: "hidden", // 👈 fix dứt điểm
   },
 });

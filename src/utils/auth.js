@@ -1,10 +1,12 @@
-import jwtDecode from "jwt-decode";
+import {jwtDecode} from "jwt-decode";
 
 /**
  * Kiểm tra token hết hạn chưa
  */
 export function isTokenExpired(token) {
   if (!token) return true;
+
+  console.log(token)
 
   try {
     const decoded = jwtDecode(token);
