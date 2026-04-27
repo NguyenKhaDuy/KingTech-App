@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -8,23 +8,65 @@ import {
   ScrollView,
   Image,
   Alert,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import * as ImagePicker from 'expo-image-picker';
+  Platform,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import * as ImagePicker from "expo-image-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function CreateRequestScreen() {
-  const [description, setDescription] = useState('');
+  const [description, setDescription] = useState("");
   const [images, setImages] = useState([]);
 
+  // SERVICE
+  const [services, setServices] = useState([]);
+  const [selectedService, setSelectedService] = useState(null);
+  const [openService, setOpenService] = useState(false);
+  const [location, setLocation] = useState("");
+
+  // DATE TIME
+  const [date, setDate] = useState(new Date());
+  const [time, setTime] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+
+  // ================= API =================
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      const res = await fetch("http://10.0.2.2:8082/api/service/all/");
+      const data = await res.json();
+
+      if (data?.data) {
+        setServices(data.data);
+      }
+    } catch (err) {
+      console.error("Fetch services error:", err);
+    }
+  };
+
+  // ================= DATE FORMAT =================
+  const formatDate = (d) => d.toLocaleDateString("vi-VN");
+
+  const formatTime = (t) =>
+    t.toLocaleTimeString("vi-VN", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  // ================= IMAGE =================
   const pickImage = async () => {
     if (images.length >= 5) {
-      Alert.alert('Limit', 'Maximum 5 images');
+      Alert.alert("Limit", "Maximum 5 images");
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsMultipleSelection: true,
       quality: 0.7,
     });
@@ -37,14 +79,14 @@ export default function CreateRequestScreen() {
 
   const takePhoto = async () => {
     if (images.length >= 5) {
-      Alert.alert('Limit', 'Maximum 5 images');
+      Alert.alert("Limit", "Maximum 5 images");
       return;
     }
 
     const permission = await ImagePicker.requestCameraPermissionsAsync();
 
     if (!permission.granted) {
-      Alert.alert('Permission required', 'Allow camera access');
+      Alert.alert("Permission required", "Allow camera access");
       return;
     }
 
@@ -58,10 +100,10 @@ export default function CreateRequestScreen() {
   };
 
   const handleUpload = () => {
-    Alert.alert('Select Image', 'Choose option', [
-      { text: 'Camera', onPress: takePhoto },
-      { text: 'Gallery', onPress: pickImage },
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert("Select Image", "Choose option", [
+      { text: "Camera", onPress: takePhoto },
+      { text: "Gallery", onPress: pickImage },
+      { text: "Cancel", style: "cancel" },
     ]);
   };
 
@@ -69,31 +111,140 @@ export default function CreateRequestScreen() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // ================= SUBMIT =================
+  const handleSubmit = async () => {
+    try {
+      if (!selectedService) {
+        Alert.alert("Error", "Please select service");
+        return;
+      }
+
+      const userStr = await AsyncStorage.getItem("user");
+      const token = await AsyncStorage.getItem("token");
+
+      if (!userStr || !token) {
+        Alert.alert("Error", "User not logged in");
+        return;
+      }
+
+      const user = JSON.parse(userStr);
+
+      const formData = new FormData();
+
+      // service + user
+      formData.append("id_service", selectedService.id_service);
+      formData.append("id_customer", user.id_user);
+
+      // address
+      formData.append("location", location || "");
+      formData.append("description", description);
+
+      // date + time
+      const scheduled_date = date.toISOString().split("T")[0];
+      const scheduled_time = time.toTimeString().slice(0, 5) + ":00";
+
+      formData.append("scheduled_date", scheduled_date);
+      formData.append("scheduled_time", scheduled_time);
+
+      // images
+      images.forEach((uri, index) => {
+        formData.append("imageRequest", {
+          uri,
+          name: `image_${index}.jpg`,
+          type: "image/jpeg",
+        });
+      });
+
+      const res = await fetch("http://10.0.2.2:8082/api/customer/request/", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (data.message === "SUCCESS") {
+        Alert.alert("Success", "Tạo yêu cầu thành công");
+
+        // reset form (optional)
+        setDescription("");
+        setImages([]);
+        setSelectedService(null);
+        setLocation("");
+      } else {
+        Alert.alert("Error", data.message || "Failed");
+      }
+    } catch (err) {
+      console.log(err);
+      Alert.alert("Error", "System error");
+    }
+  };
+
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: '#ff6600' }}>
-      
-      {/* 🔥 HEADER giống Request */}
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: "#ff6600" }}
+    >
+      {/* HEADER */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Create Request</Text>
       </View>
 
-      {/* 🔥 CONTENT */}
-      <View style={[styles.content, { paddingBottom: 10 }]}>
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-          
+      {/* CONTENT */}
+      <View style={styles.content}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
           {/* SERVICE */}
           <View style={styles.card}>
             <Text style={styles.label}>Service</Text>
-            <TouchableOpacity style={styles.inputBox}>
+
+            <TouchableOpacity
+              style={styles.inputBox}
+              onPress={() => setOpenService(!openService)}
+            >
               <Ionicons name="construct-outline" size={18} color="#777" />
-              <Text style={styles.inputText}>Fix Laptop</Text>
+              <Text style={styles.inputText}>
+                {selectedService
+                  ? selectedService.name_service
+                  : "Select service"}
+              </Text>
+
+              <Ionicons
+                name={openService ? "chevron-up" : "chevron-down"}
+                size={18}
+                color="#777"
+                style={{ marginLeft: "auto" }}
+              />
             </TouchableOpacity>
+
+            {openService && (
+              <View style={styles.dropdown}>
+                <ScrollView style={{ maxHeight: 200 }}>
+                  {services.map((item) => (
+                    <TouchableOpacity
+                      key={item.id_service}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        setSelectedService(item);
+                        setOpenService(false);
+                      }}
+                    >
+                      <Text>{item.name_service}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
           </View>
 
           {/* ADDRESS */}
           <View style={styles.card}>
             <Text style={styles.label}>Address</Text>
-            <TextInput placeholder="Enter your address" style={styles.input} />
+            <TextInput placeholder="Enter your address" value={location} style={styles.input}  onChangeText={setLocation}/>
           </View>
 
           {/* DATE TIME */}
@@ -101,14 +252,20 @@ export default function CreateRequestScreen() {
             <Text style={styles.label}>Schedule</Text>
 
             <View style={styles.row}>
-              <TouchableOpacity style={styles.halfInput}>
+              <TouchableOpacity
+                style={styles.halfInput}
+                onPress={() => setShowDatePicker(true)}
+              >
                 <Ionicons name="calendar-outline" size={18} color="#777" />
-                <Text style={styles.inputText}>20 Apr</Text>
+                <Text style={styles.inputText}>{formatDate(date)}</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.halfInput}>
+              <TouchableOpacity
+                style={styles.halfInput}
+                onPress={() => setShowTimePicker(true)}
+              >
                 <Ionicons name="time-outline" size={18} color="#777" />
-                <Text style={styles.inputText}>10:30 AM</Text>
+                <Text style={styles.inputText}>{formatTime(time)}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -131,7 +288,7 @@ export default function CreateRequestScreen() {
 
             <View style={styles.imageGrid}>
               {images.map((img, index) => (
-                <View key={img + index} style={styles.imageItem}>
+                <View key={index} style={styles.imageItem}>
                   <Image source={{ uri: img }} style={styles.preview} />
 
                   <TouchableOpacity
@@ -151,51 +308,66 @@ export default function CreateRequestScreen() {
             </View>
           </View>
 
-          {/* PRICE */}
-          <View style={styles.card}>
-            <Text style={styles.label}>Estimated Price</Text>
-            <Text style={styles.price}>$50</Text>
-          </View>
-
           {/* BUTTON */}
-          <TouchableOpacity style={styles.submitBtn}>
+          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
             <Text style={styles.submitText}>Submit Request</Text>
           </TouchableOpacity>
-
-          <View style={{ height: 40 }} />
         </ScrollView>
+
+        {/* DATE PICKER */}
+        {showDatePicker && (
+          <DateTimePicker
+            value={date}
+            mode="date"
+            display="default"
+            onChange={(e, d) => {
+              setShowDatePicker(false);
+              if (d) setDate(d);
+            }}
+          />
+        )}
+
+        {/* TIME PICKER */}
+        {showTimePicker && (
+          <DateTimePicker
+            value={time}
+            mode="time"
+            display="default"
+            onChange={(e, t) => {
+              setShowTimePicker(false);
+              if (t) setTime(t);
+            }}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
 }
 
+// ================= STYLE =================
 const styles = StyleSheet.create({
-  /* HEADER */
   header: {
-    backgroundColor: '#ff6600',
+    backgroundColor: "#ff6600",
     paddingVertical: 15,
-    alignItems: 'center',
+    alignItems: "center",
   },
 
   headerTitle: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 
-  /* CONTENT */
   content: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 20,
-
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
 
-  /* CARD */
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 15,
     borderRadius: 15,
     marginBottom: 12,
@@ -203,106 +375,104 @@ const styles = StyleSheet.create({
   },
 
   label: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
 
   inputBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   inputText: {
     marginLeft: 10,
-    color: '#555',
+    color: "#555",
+  },
+
+  dropdown: {
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 10,
+  },
+
+  dropdownItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f2f2f2",
   },
 
   input: {
-    backgroundColor: '#f2f2f2',
+    backgroundColor: "#f2f2f2",
     padding: 10,
     borderRadius: 10,
   },
 
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 
   halfInput: {
     flex: 0.48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f2f2f2',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f2f2f2",
     padding: 10,
     borderRadius: 10,
   },
 
   textArea: {
-    backgroundColor: '#f2f2f2',
+    backgroundColor: "#f2f2f2",
     borderRadius: 10,
     padding: 10,
     height: 100,
-    textAlignVertical: 'top',
   },
 
   imageGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 10,
   },
 
   imageItem: {
-    width: '30%',
+    width: "30%",
     height: 100,
-    borderRadius: 10,
-    overflow: 'hidden',
-    position: 'relative',
   },
 
   preview: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
   },
 
   addBox: {
-    width: '30%',
+    width: "30%",
     height: 100,
-    borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#ddd",
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   removeBtn: {
-    position: 'absolute',
+    position: "absolute",
     top: 5,
     right: 5,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 12,
-    width: 22,
-    height: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  price: {
-    color: '#ff6600',
-    fontWeight: 'bold',
-    fontSize: 16,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    borderRadius: 10,
+    padding: 3,
   },
 
   submitBtn: {
-    backgroundColor: '#ff6600',
+    backgroundColor: "#ff6600",
     padding: 15,
     borderRadius: 15,
-    alignItems: 'center',
-    marginTop: 10,
+    alignItems: "center",
   },
 
   submitText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
+    color: "#fff",
+    fontWeight: "bold",
   },
 });

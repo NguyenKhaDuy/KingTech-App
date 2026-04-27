@@ -56,14 +56,44 @@ export default function Schedule({ schedules = [] }) {
     return `${normalizeTime(start)} - ${normalizeTime(end)}`;
   };
 
+  //SORT THEO NGÀY GẦN NHẤT LÊN TRÊN
+  const sortedSchedules = [...schedules].sort((a, b) => {
+    const getTime = (date) => {
+      if (!date) return 0;
+
+      let parsed;
+
+      if (Array.isArray(date)) {
+        const [y, m, d] = date;
+        parsed = new Date(y, m - 1, d);
+      } else if (typeof date === "string" && /^\d{8}$/.test(date)) {
+        parsed = new Date(
+          date.slice(0, 4),
+          date.slice(4, 6) - 1,
+          date.slice(6, 8)
+        );
+      } else if (typeof date === "string" && date.includes("-")) {
+        const [d, m, y] = date.split("-");
+        parsed = new Date(`${y}-${m}-${d}`);
+      } else {
+        parsed = new Date(date);
+      }
+
+      return parsed?.getTime?.() || 0;
+    };
+
+    // giảm dần: mới nhất lên đầu
+    return getTime(b.date) - getTime(a.date);
+  });
+
   return (
     <View style={styles.section}>
       <Text style={styles.title}>Lịch làm việc</Text>
 
-      {schedules.length === 0 ? (
+      {sortedSchedules.length === 0 ? (
         <Text style={styles.empty}>Chưa có lịch</Text>
       ) : (
-        schedules.map((s, i) => (
+        sortedSchedules.map((s, i) => (
           <View key={i} style={styles.item}>
             <Text style={styles.day}>{formatDate(s.date)}</Text>
 
