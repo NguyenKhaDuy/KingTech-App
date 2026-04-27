@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function TechnicianCard({ item, navigation }) {
@@ -21,14 +15,14 @@ export default function TechnicianCard({ item, navigation }) {
     //full
     for (let i = 0; i < full; i++) {
       stars.push(
-        <Ionicons key={`full-${i}`} name="star" size={14} color="#f5a623" />
+        <Ionicons key={`full-${i}`} name="star" size={14} color="#f5a623" />,
       );
     }
 
     //half
     if (hasHalf) {
       stars.push(
-        <Ionicons key="half" name="star-half" size={14} color="#f5a623" />
+        <Ionicons key="half" name="star-half" size={14} color="#f5a623" />,
       );
     }
 
@@ -40,7 +34,7 @@ export default function TechnicianCard({ item, navigation }) {
           name="star-outline"
           size={14}
           color="#f5a623"
-        />
+        />,
       );
     }
 
@@ -77,7 +71,14 @@ export default function TechnicianCard({ item, navigation }) {
         </View>
       </View>
 
-      <TouchableOpacity style={styles.btn}>
+      <TouchableOpacity
+        style={styles.btn}
+        onPress={() =>
+          navigation.navigate("Booking", {
+            technicianId: item.id_user,
+          })
+        }
+      >
         <Text style={styles.text}>Book</Text>
       </TouchableOpacity>
     </TouchableOpacity>
