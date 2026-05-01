@@ -16,9 +16,10 @@ import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-export default function CreateRequestScreen() {
+export default function CreateRequestScreen({ route }) {
   const [description, setDescription] = useState("");
   const [images, setImages] = useState([]);
+  const { technicianId } = route.params;
 
   // SERVICE
   const [services, setServices] = useState([]);
@@ -130,6 +131,10 @@ export default function CreateRequestScreen() {
       const user = JSON.parse(userStr);
 
       const formData = new FormData();
+
+      if (technicianId) {
+        formData.append("id_technician", technicianId);
+      }
 
       // service + user
       formData.append("id_service", selectedService.id_service);
@@ -244,7 +249,12 @@ export default function CreateRequestScreen() {
           {/* ADDRESS */}
           <View style={styles.card}>
             <Text style={styles.label}>Address</Text>
-            <TextInput placeholder="Enter your address" value={location} style={styles.input}  onChangeText={setLocation}/>
+            <TextInput
+              placeholder="Enter your address"
+              value={location}
+              style={styles.input}
+              onChangeText={setLocation}
+            />
           </View>
 
           {/* DATE TIME */}

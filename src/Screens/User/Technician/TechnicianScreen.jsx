@@ -35,12 +35,9 @@ export default function TechnicianScreen({ navigation }) {
 
   const fetchTechnicians = async () => {
     try {
-      const res = await axios.get(
-        "http://10.0.2.2:8082/api/all/technician/",
-        {
-          params: { pageNo: 1 },
-        }
-      );
+      const res = await axios.get("http://10.0.2.2:8082/api/all/technician/", {
+        params: { pageNo: 1 },
+      });
 
       const mapped = res.data.data.map((t) => ({
         id: t.id_user,
@@ -65,9 +62,7 @@ export default function TechnicianScreen({ navigation }) {
 
   const fetchSkills = async () => {
     try {
-      const res = await axios.get(
-        "http://10.0.2.2:8082/api/skill/"
-      );
+      const res = await axios.get("http://10.0.2.2:8082/api/skill/");
 
       const skillNames = res.data.data.map((s) => s.skill_name);
 
@@ -79,13 +74,9 @@ export default function TechnicianScreen({ navigation }) {
 
   const fetchServices = async () => {
     try {
-      const res = await axios.get(
-        "http://10.0.2.2:8082/api/service/all/"
-      );
+      const res = await axios.get("http://10.0.2.2:8082/api/service/all/");
 
-      const serviceNames = res.data.data.map(
-        (s) => s.name_service
-      );
+      const serviceNames = res.data.data.map((s) => s.name_service);
 
       setServices(["Tất cả", ...serviceNames]);
     } catch (error) {
@@ -96,12 +87,10 @@ export default function TechnicianScreen({ navigation }) {
   // ================= FILTER =================
   const filtered = technicians.filter((t) => {
     const matchSkill =
-      selectedSkill === "Tất cả" ||
-      t.skills.includes(selectedSkill);
+      selectedSkill === "Tất cả" || t.skills.includes(selectedSkill);
 
     const matchService =
-      selectedService === "Tất cả" ||
-      t.services.includes(selectedService);
+      selectedService === "Tất cả" || t.services.includes(selectedService);
 
     const matchSearch =
       t.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -127,12 +116,7 @@ export default function TechnicianScreen({ navigation }) {
     return (
       <>
         {[...Array(full)].map((_, i) => (
-          <Ionicons
-            key={`f-${i}`}
-            name="star"
-            size={14}
-            color="#f5a623"
-          />
+          <Ionicons key={`f-${i}`} name="star" size={14} color="#f5a623" />
         ))}
         {[...Array(empty)].map((_, i) => (
           <Ionicons
@@ -180,16 +164,12 @@ export default function TechnicianScreen({ navigation }) {
             {skills.map((item, index) => (
               <TouchableOpacity
                 key={index}
-                style={[
-                  styles.tag,
-                  selectedSkill === item && styles.tagActive,
-                ]}
+                style={[styles.tag, selectedSkill === item && styles.tagActive]}
                 onPress={() => setSelectedSkill(item)}
               >
                 <Text
                   style={{
-                    color:
-                      selectedSkill === item ? "#fff" : "#000",
+                    color: selectedSkill === item ? "#fff" : "#000",
                   }}
                 >
                   {item}
@@ -216,8 +196,7 @@ export default function TechnicianScreen({ navigation }) {
               >
                 <Text
                   style={{
-                    color:
-                      selectedService === item ? "#fff" : "#000",
+                    color: selectedService === item ? "#fff" : "#000",
                   }}
                 >
                   {item}
@@ -256,7 +235,14 @@ export default function TechnicianScreen({ navigation }) {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.bookBtn}>
+              <TouchableOpacity
+                style={styles.bookBtn}
+                onPress={() =>
+                  navigation.navigate("Booking", {
+                    technicianId: item.id,
+                  })
+                }
+              >
                 <Text style={styles.bookText}>Book</Text>
               </TouchableOpacity>
             </TouchableOpacity>

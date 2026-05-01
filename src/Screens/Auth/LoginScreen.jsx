@@ -75,8 +75,6 @@ export default function LoginScreen() {
 
       const idToken = response.data?.idToken;
 
-      console.log(response);
-
       if (!idToken) {
         showToast("error", "Không lấy được Google token");
         return;

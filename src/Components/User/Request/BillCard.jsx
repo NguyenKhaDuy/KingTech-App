@@ -2,12 +2,20 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
 export default function BillCard({ item, onPay, onViewInvoice }) {
+  const formatMoney = (amount) => {
+    if (!amount) return "0 ₫";
+
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount);
+  };
   return (
     <View style={styles.card}>
       <View style={{ flex: 1 }}>
-        <Text style={styles.service}>{item.name}</Text>
-        <Text style={styles.sub}>Amount: {item.price}</Text>
-        <Text style={styles.status}>{item.status}</Text>
+        <Text style={styles.service}>Hóa đơn: {item.id_invoices}</Text>
+        <Text style={styles.sub}>Amount: {formatMoney(item.total_amount)}</Text>
+        <Text style={styles.status}>{item.name_status}</Text>
       </View>
 
       {item.status === "pending" ? (

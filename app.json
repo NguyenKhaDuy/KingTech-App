@@ -23,7 +23,20 @@
         "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "com.app.KingTech",
+              "host": "*"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/logo.png"
@@ -31,6 +44,10 @@
     "plugins": [
       "expo-web-browser",
       "@react-native-google-signin/google-signin"
-    ]
+    ],
+    "notification": {
+      "icon": "./assets/notification_icon.png",
+      "color": "#ffffff"
+    }
   }
 }

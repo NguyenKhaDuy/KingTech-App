@@ -4,7 +4,6 @@ let stompClient = null;
 let globalListeners = [];
 
 export function connectWebSocket(token) {
-
   if (stompClient?.connected) return stompClient;
 
   stompClient = new Client({
@@ -21,12 +20,19 @@ export function connectWebSocket(token) {
     onConnect: () => {
       console.log("STOMP CONNECTED");
 
+      //SUBSCRIBE CHUNG
+      stompClient.subscribe("/topic/notify", (msg) => {
+        const data = JSON.parse(msg.body);
+        console.log("TOPIC:", data);
+        globalListeners.forEach((fn) => fn(data));
+      });
+
       stompClient.subscribe("/user/queue/notify", (msg) => {
         const data = JSON.parse(msg.body);
 
         console.log("WS RAW:", data);
 
-        globalListeners.forEach(fn => fn(data));
+        globalListeners.forEach((fn) => fn(data));
       });
     },
 
@@ -35,7 +41,7 @@ export function connectWebSocket(token) {
     },
   });
 
-  // 🔥 FIX cho React Native
+  //FIX cho React Native
   stompClient.forceBinaryWSFrames = true;
 
   stompClient.activate();
