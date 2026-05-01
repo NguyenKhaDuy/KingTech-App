@@ -8,6 +8,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {showToast} from "../../../utils/showToast"
 
 export default function ReviewScreen({ route, navigation }) {
   const { request } = route.params;
@@ -15,14 +17,53 @@ export default function ReviewScreen({ route, navigation }) {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
 
-  const handleSubmit = () => {
-    alert("Đánh giá thành công!");
-    navigation.goBack();
+  const handleSubmit = async () => {
+    if (rating === 0) {
+      alert("Vui lòng chọn số sao");
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        alert("Chưa đăng nhập");
+        return;
+      }
+
+      const payload = {
+        stars: rating,
+        comment: comment,
+        customer_id: request.customer?.id_user,
+        technician_id: request.technicicanDTO?.id_user,
+      };
+
+      const res = await fetch("http://10.0.2.2:8082/api/customer/rating/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error("API lỗi");
+      }
+
+      showToast("success", "Đánh giá thành công");
+      navigation.goBack();
+    } catch (err) {
+      console.log(err);
+      showToast("error", "Gửi đánh giá thất bại");
+    }
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: "#ff6600" }}>
-      
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: "#ff6600" }}
+    >
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -43,9 +84,7 @@ export default function ReviewScreen({ route, navigation }) {
         <View style={styles.starRow}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity key={star} onPress={() => setRating(star)}>
-              <Text style={styles.star}>
-                {star <= rating ? "⭐" : "☆"}
-              </Text>
+              <Text style={styles.star}>{star <= rating ? "⭐" : "☆"}</Text>
             </TouchableOpacity>
           ))}
         </View>

@@ -3,7 +3,6 @@ import { View, Text, StyleSheet, Image } from "react-native";
 
 export default function Reviews({ ratings = [] }) {
 
-  // 🔥 format ngày giờ
   const formatDate = (date) => {
     if (!date) return "";
 

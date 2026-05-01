@@ -1,18 +1,23 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 
-export default function RequestCard({ item, onPay, onViewDetail, onReview }) {
+
+export default function RequestCard({ item, onPress, onViewDetail, onReview }) {
+  // console.log(item)
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={() => onViewDetail(item)}>
       <View style={{ flex: 1 }}>
-        <Text style={styles.service}>{item.name}</Text>
-        <Text style={styles.sub}>Technician: {item.tech}</Text>
-        <Text style={styles.status}>{item.status}</Text>
+        <Text style={styles.service}>{item.name_service}</Text>
+        <Text style={styles.sub}>Technician: {item.technicicanDTO?.full_name}</Text>
+        <Text style={styles.status}>{item.status_code}</Text>
       </View>
 
-      {item.status === "completed" ? (
+      {item.status_code === "COMPLETED" ? (
         <View style={{ gap: 5 }}>
-          <TouchableOpacity style={styles.payBtn} onPress={() => onPay(item)}>
+          <TouchableOpacity
+            style={styles.payBtn}
+            onPress={() => onPress(onPress)}
+          >
             <Text style={styles.text}>Thanh toán</Text>
           </TouchableOpacity>
 
@@ -24,14 +29,15 @@ export default function RequestCard({ item, onPay, onViewDetail, onReview }) {
           </TouchableOpacity>
         </View>
       ) : (
-        <TouchableOpacity
-          style={styles.detailBtn}
-          onPress={() => onViewDetail(item)}
-        >
-          <Text style={styles.text}>Detail</Text>
-        </TouchableOpacity>
+        <></>
+        // <TouchableOpacity
+        //   style={styles.detailBtn}
+        //   onPress={() => onViewDetail(item)}
+        // >
+        //   <Text style={styles.text}>Detail</Text>
+        // </TouchableOpacity>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -49,7 +55,7 @@ const styles = StyleSheet.create({
   status: { fontWeight: "bold" },
   payBtn: { backgroundColor: "#00aa55", padding: 8, borderRadius: 8 },
   detailBtn: { backgroundColor: "#ff6600", padding: 8, borderRadius: 8 },
-  text: { color: "#fff", textAlign: "center"},
+  text: { color: "#fff", textAlign: "center" },
   reviewBtn: {
     backgroundColor: "#ffaa00",
     padding: 8,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,45 +8,114 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const API_BASE_URL = "http://10.0.2.2:8082/api";
 
 export default function NotificationScreen({ navigation }) {
-  const [notifications, setNotifications] = useState([
-    {
-      id: "1",
-      title: "Đặt lịch thành công",
-      content: "Bạn đã đặt lịch sửa máy lạnh thành công.",
-      time: "10:30 15/04/2026",
-      isRead: false,
-    },
-    {
-      id: "2",
-      title: "Kỹ thuật viên đang đến",
-      content: "Kỹ thuật viên đang trên đường đến địa chỉ của bạn.",
-      time: "09:00 15/04/2026",
-      isRead: false,
-    },
-    {
-      id: "3",
-      title: "Khuyến mãi mới",
-      content: "Giảm giá 20% cho dịch vụ sửa chữa điện lạnh trong tuần này.",
-      time: "14:20 14/04/2026",
-      isRead: true,
-    },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handlePress = (id) => {
-    setNotifications((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, isRead: true } : item)),
-    );
+  // ===== FORMAT TIME (array BE) =====
+  const formatTime = (arr) => {
+    if (!arr || arr.length < 5) return "";
+
+    const [year, month, day, hour, minute] = arr;
+
+    const pad = (n) => String(n).padStart(2, "0");
+
+    return `${pad(hour)}:${pad(minute)} ${pad(day)}/${pad(month)}/${year}`;
   };
 
+  // ===== FETCH API =====
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("user");
+
+      if (!token || !userStr) return;
+
+      const user = JSON.parse(userStr);
+
+      const res = await fetch(
+        `http://10.0.2.2:8082/api/user/notification/id_user=${user.id_user}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const json = await res.json();
+
+      if (json.message === "Success") {
+        //SORT trước (mới nhất lên đầu)
+        const sorted = [...json.data].sort((a, b) => {
+          const dateA = new Date(
+            a.created_at[0],
+            a.created_at[1] - 1,
+            a.created_at[2],
+            a.created_at[3] || 0,
+            a.created_at[4] || 0,
+          );
+
+          const dateB = new Date(
+            b.created_at[0],
+            b.created_at[1] - 1,
+            b.created_at[2],
+            b.created_at[3] || 0,
+            b.created_at[4] || 0,
+          );
+
+          return dateB - dateA; // mới nhất lên đầu
+        });
+
+        //rồi mới map
+        const mapped = sorted.map((n) => ({
+          id: n.id_notify,
+          title: n.title,
+          content: n.message,
+          time: formatTime(n.created_at),
+          isRead: n.status_id == 1,
+          type: n.type,
+          idType: n.id_type,
+          idUserNotify: n.id_user_notify,
+        }));
+
+        setNotifications(mapped);
+      }
+    } catch (err) {
+      console.log(err);
+      alert("Lỗi server");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  // ===== CLICK =====
+  const handlePress = (item) => {
+    // update UI đọc
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
+    );
+
+    navigation.navigate("NotificationDetail", {
+      id_notify: item.id,
+      id_user_notify: item.idUserNotify,
+    });
+  };
+
+  // ===== RENDER =====
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={[styles.item, !item.isRead && styles.unreadItem]}
-      onPress={() => {
-        handlePress(item.id);
-        navigation.navigate("NotificationDetail", { notification: item });
-      }}
+      onPress={() => handlePress(item)}
     >
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>{item.title}</Text>
@@ -80,12 +149,16 @@ export default function NotificationScreen({ navigation }) {
 
       {/* CONTENT */}
       <View style={styles.contentWrapper}>
-        <FlatList
-          data={notifications}
-          keyExtractor={(item) => item.id}
-          renderItem={renderItem}
-          showsVerticalScrollIndicator={false}
-        />
+        {loading ? (
+          <Text style={{ textAlign: "center" }}>Đang tải...</Text>
+        ) : (
+          <FlatList
+            data={notifications}
+            keyExtractor={(item) => item.idUserNotify.toString()}
+            renderItem={renderItem}
+            showsVerticalScrollIndicator={false}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -125,7 +198,7 @@ const styles = StyleSheet.create({
   },
 
   unreadItem: {
-    backgroundColor: "#fff3e6", // màu nổi cho chưa đọc
+    backgroundColor: "#fff3e6",
     borderWidth: 1,
     borderColor: "#ff6600",
   },

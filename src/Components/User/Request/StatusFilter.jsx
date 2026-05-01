@@ -11,13 +11,29 @@ export default function StatusFilter({ statuses, currentStatus, onChange }) {
           style={styles.item}
           onPress={() => onChange(s.key)}
         >
-          <Ionicons
-            name={s.icon}
-            size={18}
-            color={currentStatus === s.key ? '#ff6600' : '#999'}
-          />
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons
+              name={s.icon}
+              size={18}
+              color={currentStatus === s.key ? '#ff6600' : '#999'}
+            />
+
+            {/*BADGE */}
+            {s.count > 0 && (
+              <View
+                style={[
+                  styles.badge,
+                  currentStatus === s.key && styles.badgeActive,
+                ]}
+              >
+                <Text style={styles.badgeText}>{s.count}</Text>
+              </View>
+            )}
+          </View>
 
           <Text
+            numberOfLines={1}
+            ellipsizeMode="tail"
             style={[
               styles.label,
               currentStatus === s.key && styles.active,
@@ -41,8 +57,18 @@ const styles = StyleSheet.create({
     borderColor: '#eee',
     marginBottom: 10,
   },
-  item: { alignItems: 'center', flex: 1, paddingBottom: 8 },
-  label: { fontSize: 12, color: '#999' },
+  item: { 
+    alignItems: 'center', 
+    flex: 1, 
+    paddingBottom: 8,
+    paddingHorizontal: 4,        
+  },
+  label: { 
+    fontSize: 12, 
+    color: '#999',
+    maxWidth: '100%',            
+    textAlign: 'center',         
+  },
   active: { color: '#ff6600', fontWeight: 'bold' },
   line: {
     position: 'absolute',
@@ -51,4 +77,22 @@ const styles = StyleSheet.create({
     width: '60%',
     backgroundColor: '#ff6600',
   },
+  badge: {
+  backgroundColor: '#ccc',
+  marginLeft: 4,
+  paddingHorizontal: 5,
+  borderRadius: 10,
+  minWidth: 18,
+  alignItems: 'center',
+},
+
+badgeActive: {
+  backgroundColor: '#ff6600',
+},
+
+badgeText: {
+  color: '#fff',
+  fontSize: 10,
+  fontWeight: 'bold',
+},
 });
