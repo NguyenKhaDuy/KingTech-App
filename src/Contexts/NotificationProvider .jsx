@@ -51,6 +51,7 @@ export const NotificationProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = addWebSocketListener((data) => {
       console.log("WS DATA:", data);
+      fetchUnreadCount();
 
       // update list
       setNotifications((prev) => [data, ...prev]);
@@ -78,6 +79,19 @@ export const NotificationProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
+  const markAsRead = (id) => {
+    setNotifications((prev) => {
+      const updated = prev.map((item) =>
+        item.id === id ? { ...item, status_id: 1 } : item,
+      );
+
+      const count = updated.filter((item) => item.status_id !== 1).length;
+      setUnreadCount(count);
+
+      return updated;
+    });
+  };
+
   return (
     <NotificationContext.Provider
       value={{
@@ -85,7 +99,8 @@ export const NotificationProvider = ({ children }) => {
         setNotifications,
         unreadCount,
         setUnreadCount,
-        fetchUnreadCount, // expose ra ngoài
+        fetchUnreadCount,
+        markAsRead, // expose ra ngoài
       }}
     >
       {children}

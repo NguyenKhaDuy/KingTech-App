@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { showToast } from "../../../utils/showToast";
 
 export default function NotificationDetailScreen({ route, navigation }) {
   const { id_notify, id_user_notify } = route.params;
@@ -59,16 +60,16 @@ export default function NotificationDetailScreen({ route, navigation }) {
         setNotification({
           title: n.title,
           content: n.message,
-          time: formatTime(n.created_at),
+          time: formatTime(n.dateTime),
           type: n.type,
           idType: n.id_type,
         });
       } else {
-        alert("Không lấy được chi tiết");
+        showToast("error", "Không lấy được chi tiết");
       }
     } catch (err) {
       console.log(err);
-      alert("Lỗi server");
+      showToast("error", "Lỗi server");
     } finally {
       setLoading(false);
     }
