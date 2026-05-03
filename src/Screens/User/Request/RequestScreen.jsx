@@ -9,13 +9,13 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import TopTabs from "../../../Components/User/Request/TopTabs";
 import StatusFilter from "../../../Components/User/Request/StatusFilter";
 import RequestCard from "../../../Components/User/Request/RequestCard";
 import BillCard from "../../../Components/User/Request/BillCard";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as WebBrowser from "expo-web-browser";
+import { showToast } from "../../../utils/showToast";
 
 const mapStatus = (status) => {
   switch (status) {
@@ -279,11 +279,11 @@ export default function RequestScreen({ navigation }) {
 
           setBankList([mockNCB, ...mappedBanks]);
         } else {
-          showToast("Không lấy được ngân hàng", "error");
+          showToast("error", "Không lấy được ngân hàng");
         }
       } catch (err) {
         console.log(err);
-        showToast("Lỗi tải ngân hàng", "error");
+        showToast("error", "Lỗi tải ngân hàng");
       } finally {
         setLoadingBank(false);
       }

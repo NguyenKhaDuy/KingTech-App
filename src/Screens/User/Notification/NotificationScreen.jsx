@@ -9,13 +9,15 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-const API_BASE_URL = "http://10.0.2.2:8082/api";
+import { showToast } from "../../../utils/showToast";
+import { useContext } from "react";
+import { NotificationContext } from "../../../Contexts/NotificationProvider ";
 
 export default function NotificationScreen({ navigation }) {
-  const [notifications, setNotifications] = useState([]);
+  // const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const { notifications, setNotifications, setUnreadCount } =
+    useContext(NotificationContext);
   // ===== FORMAT TIME (array BE) =====
   const formatTime = (arr) => {
     if (!arr || arr.length < 5) return "";
@@ -53,20 +55,21 @@ export default function NotificationScreen({ navigation }) {
       if (json.message === "Success") {
         //SORT trước (mới nhất lên đầu)
         const sorted = [...json.data].sort((a, b) => {
+          console.log(a.dateTime);
           const dateA = new Date(
-            a.created_at[0],
-            a.created_at[1] - 1,
-            a.created_at[2],
-            a.created_at[3] || 0,
-            a.created_at[4] || 0,
+            a.dateTime[0],
+            a.dateTime[1] - 1,
+            a.dateTime[2],
+            a.dateTime[3] || 0,
+            a.dateTime[4] || 0,
           );
 
           const dateB = new Date(
-            b.created_at[0],
-            b.created_at[1] - 1,
-            b.created_at[2],
-            b.created_at[3] || 0,
-            b.created_at[4] || 0,
+            b.dateTime[0],
+            b.dateTime[1] - 1,
+            b.dateTime[2],
+            b.dateTime[3] || 0,
+            b.dateTime[4] || 0,
           );
 
           return dateB - dateA; // mới nhất lên đầu
@@ -77,7 +80,7 @@ export default function NotificationScreen({ navigation }) {
           id: n.id_notify,
           title: n.title,
           content: n.message,
-          time: formatTime(n.created_at),
+          time: formatTime(n.dateTime),
           isRead: n.status_id == 1,
           type: n.type,
           idType: n.id_type,
@@ -88,7 +91,7 @@ export default function NotificationScreen({ navigation }) {
       }
     } catch (err) {
       console.log(err);
-      alert("Lỗi server");
+      showToast("error", "Lỗi server");
     } finally {
       setLoading(false);
     }
@@ -98,12 +101,20 @@ export default function NotificationScreen({ navigation }) {
     fetchNotifications();
   }, []);
 
+
   // ===== CLICK =====
   const handlePress = (item) => {
-    // update UI đọc
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
-    );
+    setNotifications((prev) => {
+      const updated = prev.map((n) =>
+        n.id === item.id ? { ...n, isRead: true } : n,
+      );
+
+      // 🔥 cập nhật lại badge
+      const count = updated.filter((n) => !n.isRead).length;
+      setUnreadCount(count);
+
+      return updated;
+    });
 
     navigation.navigate("NotificationDetail", {
       id_notify: item.id,

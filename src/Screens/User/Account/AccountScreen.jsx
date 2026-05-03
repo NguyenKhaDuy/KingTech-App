@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -12,27 +12,111 @@ import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { disconnectWebSocket } from "../../../utils/stompClient";
+import avatar_default from "../../../../assets/avatar_default.jpg";
+import axios from "axios";
+import { showToast } from "../../../utils/showToast";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function AccountScreen({ navigation }) {
-  const [avatar, setAvatar] = useState("https://i.pravatar.cc/150");
+  const [profile, setProfile] = useState(null);
+  const [avatar, setAvatar] = useState(null);
+
+  //gọi api profile
+  const fetchProfile = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("user");
+
+      if (!token || !userStr) return;
+
+      const user = JSON.parse(userStr);
+
+      const res = await axios.get(
+        `http://10.0.2.2:8082/api/customer/profile/id=${user.id_user}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      const data = res.data.data;
+
+      setProfile(data);
+
+      if (data?.avatarBase64) {
+        setAvatar(`data:image/jpeg;base64,${data.avatarBase64}`);
+      } else {
+        setAvatar(null);
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfile();
+    }, []),
+  );
 
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (!permission.granted) {
-      Alert.alert("Lỗi", "Bạn cần cấp quyền để chọn ảnh!");
+    if (permission.status !== "granted") {
+      showToast("error", "Bạn cần cấp quyền để chọn ảnh!");
       return;
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"],
-      allowsEditing: true,
-      aspect: [1, 1],
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true, //cho crop
+      aspect: [1, 1], //vuông để fit avatar tròn
       quality: 1,
     });
 
-    if (!result.canceled) {
-      setAvatar(result.assets[0].uri);
+    if (result.canceled) return;
+
+    const asset = result.assets[0];
+
+    // update UI trước
+    setAvatar(asset.uri);
+
+    // upload luôn
+    await uploadAvatar(asset);
+  };
+
+  //gọi api upload ảnh đại diện
+  const uploadAvatar = async (asset) => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("user");
+
+      if (!token || !userStr) return;
+
+      const user = JSON.parse(userStr);
+
+      const formData = new FormData();
+
+      formData.append("id_user", user.id_user);
+
+      formData.append("avatar", {
+        uri: asset.uri,
+        name: "avatar.jpg",
+        type: "image/jpeg",
+      });
+
+      await axios.put(
+        "http://10.0.2.2:8082/api/customer/profile/avatar/",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      showToast("success", "Upload thành công");
+    } catch (error) {
+      showToast("error", "Upload lỗi:");
     }
   };
 
@@ -60,21 +144,29 @@ export default function AccountScreen({ navigation }) {
       {/* HEADER PROFILE */}
       <View style={styles.profileCard}>
         <View style={{ position: "relative" }}>
-          <TouchableOpacity onPress={pickImage} activeOpacity={0.8}>
-            <Image source={{ uri: avatar }} style={styles.avatar} />
+          <TouchableOpacity activeOpacity={0.8} onPress={pickImage}>
+            <Image
+              source={avatar ? { uri: avatar } : avatar_default}
+              style={styles.avatar}
+            />
           </TouchableOpacity>
 
-          <View style={styles.cameraIcon} pointerEvents="none">
+          <View style={styles.cameraIcon}>
             <Ionicons name="camera" size={16} color="#fff" />
           </View>
         </View>
 
-        <Text style={styles.name}>Huynh Trong Nhan</Text>
-        <Text style={styles.email}>nhan@example.com</Text>
+        <Text style={styles.name}>{profile?.full_name || "No Name"}</Text>
+
+        <Text style={styles.email}>{profile?.email || "No Email"}</Text>
 
         <TouchableOpacity
           style={styles.editBtn}
-          onPress={() => navigation.navigate("EditProfile")}
+          onPress={() =>
+            navigation.navigate("EditProfile", {
+              profile,
+            })
+          }
         >
           <Text style={styles.editText}>Edit Profile</Text>
         </TouchableOpacity>

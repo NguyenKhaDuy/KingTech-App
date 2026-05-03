@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,22 +8,79 @@ import {
   ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { showToast } from "../../../utils/showToast";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
-export default function EditProfileScreen({ navigation }) {
-  const [name, setName] = useState("Huynh Trong Nhan");
-  const [phone, setPhone] = useState("0971349801");
-  const [dob, setDob] = useState("10/10/2003");
-  const [gender, setGender] = useState("male");
-  const [address, setAddress] = useState("Bạc Liêu");
+const formatDOB = (dobArr) => {
+  if (!dobArr) return "";
 
-  const handleSave = () => {
-    alert("Cập nhật thành công!");
-    navigation.goBack();
+  const [year, month, day] = dobArr;
+  return `${day.toString().padStart(2, "0")}/${month
+    .toString()
+    .padStart(2, "0")}/${year}`;
+};
+
+const parseDOB = (dobStr) => {
+  if (!dobStr) return null;
+
+  const [day, month, year] = dobStr.split("/");
+
+  return [Number(year), Number(month), Number(day)];
+};
+
+export default function EditProfileScreen({ navigation, route }) {
+  const { profile } = route.params || {};
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [dob, setDob] = useState("");
+  const [gender, setGender] = useState("");
+  const [address, setAddress] = useState("");
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.full_name || "");
+      setPhone(profile.phone_number || "");
+      setDob(formatDOB(profile.dob));
+      setGender(profile.gender || "male");
+      setAddress(profile.address || "");
+    }
+  }, [profile]);
+
+  const handleSave = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("user");
+
+      if (!token || !userStr) return;
+
+      const user = JSON.parse(userStr);
+
+      const payload = {
+        id_user: user.id_user,
+        full_name: name,
+        phone_number: phone,
+        address: address,
+        gender: gender,
+        dob: parseDOB(dob),
+      };
+
+      await axios.put("http://10.0.2.2:8082/api/customer/profile/", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      showToast("success", "Cập nhật thành công");
+      navigation.goBack();
+    } catch (error) {
+      console.log("UPDATE ERROR:", error?.response?.data || error.message);
+      showToast("error", "Cập nhật thất bại");
+    }
   };
 
   return (
     <ScrollView style={styles.container}>
-
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -37,15 +94,10 @@ export default function EditProfileScreen({ navigation }) {
 
       {/* FORM */}
       <View style={styles.form}>
-
         {/* NAME */}
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Họ tên</Text>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            style={styles.input}
-          />
+          <TextInput value={name} onChangeText={setName} style={styles.input} />
         </View>
 
         {/* PHONE */}
@@ -78,14 +130,14 @@ export default function EditProfileScreen({ navigation }) {
             <TouchableOpacity
               style={[
                 styles.genderBtn,
-                gender === "male" && styles.genderActive,
+                gender === "Nam" && styles.genderActive,
               ]}
-              onPress={() => setGender("male")}
+              onPress={() => setGender("Nam")}
             >
               <Text
                 style={[
                   styles.genderText,
-                  gender === "male" && styles.genderTextActive,
+                  gender === "Nam" && styles.genderTextActive,
                 ]}
               >
                 Nam
@@ -93,16 +145,13 @@ export default function EditProfileScreen({ navigation }) {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[
-                styles.genderBtn,
-                gender === "female" && styles.genderActive,
-              ]}
-              onPress={() => setGender("female")}
+              style={[styles.genderBtn, gender === "Nữ" && styles.genderActive]}
+              onPress={() => setGender("Nữ")}
             >
               <Text
                 style={[
                   styles.genderText,
-                  gender === "female" && styles.genderTextActive,
+                  gender === "Nữ" && styles.genderTextActive,
                 ]}
               >
                 Nữ
@@ -120,14 +169,12 @@ export default function EditProfileScreen({ navigation }) {
             style={styles.input}
           />
         </View>
-
       </View>
 
       {/* SAVE BUTTON */}
       <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
         <Text style={styles.saveText}>Lưu thay đổi</Text>
       </TouchableOpacity>
-
     </ScrollView>
   );
 }
