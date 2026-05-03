@@ -93,7 +93,7 @@ export default function RegisterScreen() {
       console.log("REGISTER ERROR:", err);
       const msg = err.message || "Đăng ký thất bại";
       setError(msg);
-      showToast("error", msg)
+      showToast("error", msg);
     } finally {
       setLoading(false);
     }
@@ -102,10 +102,7 @@ export default function RegisterScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       {/* LOGO */}
-      <Image
-        source={require("../../../assets/logo.png")}
-        style={styles.logo}
-      />
+      <Image source={require("../../../assets/logo.png")} style={styles.logo} />
 
       {/* TITLE */}
       <Text style={styles.title}>Register</Text>
@@ -175,11 +172,45 @@ export default function RegisterScreen() {
         />
       )}
 
-      <TextInput
-        placeholder="Gender (MALE/FEMALE)"
-        style={styles.input}
-        onChangeText={(val) => handleChange("gender", val)}
-      />
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Giới tính</Text>
+
+        <View style={styles.genderRow}>
+          <TouchableOpacity
+            style={[
+              styles.genderBtn,
+              form.gender === "Nam" && styles.genderActive,
+            ]}
+            onPress={() => handleChange("gender", "Nam")}
+          >
+            <Text
+              style={[
+                styles.genderText,
+                form.gender === "Nam" && styles.genderTextActive,
+              ]}
+            >
+              Nam
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.genderBtn,
+              form.gender === "Nữ" && styles.genderActive,
+            ]}
+            onPress={() => handleChange("gender", "Nữ")}
+          >
+            <Text
+              style={[
+                styles.genderText,
+                form.gender === "Nữ" && styles.genderTextActive,
+              ]}
+            >
+              Nữ
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* BUTTON */}
       <TouchableOpacity
@@ -195,10 +226,7 @@ export default function RegisterScreen() {
       {/* LOGIN */}
       <Text style={styles.footer}>
         Already have an account?{" "}
-        <Text
-          style={styles.link}
-          onPress={() => navigation.navigate("Login")}
-        >
+        <Text style={styles.link} onPress={() => navigation.navigate("Login")}>
           Login
         </Text>
       </Text>
@@ -271,5 +299,43 @@ const styles = StyleSheet.create({
     color: "red",
     textAlign: "center",
     marginBottom: 10,
+  },
+  inputGroup: {
+    marginBottom: 15,
+  },
+
+  label: {
+    fontSize: 13,
+    color: "#777",
+    marginBottom: 5,
+  },
+
+  genderRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  genderBtn: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 12,
+    backgroundColor: "#f5f5f5",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+
+  genderActive: {
+    backgroundColor: "#ff6600",
+  },
+
+  genderText: {
+    color: "#555",
+    fontWeight: "500",
+  },
+
+  genderTextActive: {
+    color: "#fff",
+    fontWeight: "bold",
   },
 });
