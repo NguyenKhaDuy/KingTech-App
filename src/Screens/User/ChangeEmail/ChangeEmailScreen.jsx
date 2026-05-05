@@ -8,28 +8,65 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { showToast } from "../../../utils/showToast";
+import { ActivityIndicator } from "react-native";
 
-export default function ChangeEmailScreen({ navigation }) {
-  const [currentEmail, setCurrentEmail] = useState("duynguyents15@gmail.com");
+export default function ChangeEmailScreen({ navigation, route }) {
+  const { email } = route.params;
+  const [currentEmail, setCurrentEmail] = useState(email);
   const [newEmail, setNewEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (newEmail !== confirmEmail) {
-      alert("Email xác nhận không khớp");
+      showToast("error", "Email xác nhận không khớp");
       return;
     }
 
     if (!newEmail.includes("@")) {
-      alert("Email không hợp lệ");
+      showToast("error", "Email không hợp lệ");
       return;
     }
 
-    navigation.navigate("OtpScreen");
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("token");
+
+      const res = await axios.put(
+        `http://10.0.2.2:8082/api/email`,
+        {
+          old_email: currentEmail,
+          new_email: newEmail,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (res.status === 200) {
+        showToast("success", "OTP đã được gửi về email");
+
+        navigation.navigate("OtpScreen", {
+          email: currentEmail,
+          type: "UPDATE_EMAIL",
+        });
+      }
+    } catch (err) {
+      console.log(err);
+      showToast("error", "Không thể gửi OTP");
+    }
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: "#ff6600" }}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: "#ff6600" }}
+    >
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -64,8 +101,16 @@ export default function ChangeEmailScreen({ navigation }) {
           onChangeText={setConfirmEmail}
         />
 
-        <TouchableOpacity style={styles.btn} onPress={handleSubmit}>
-          <Text style={styles.btnText}>Lưu email mới</Text>
+        <TouchableOpacity
+          style={[styles.btn, loading && { opacity: 0.7 }]}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>Lưu email mới</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

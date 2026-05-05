@@ -9,6 +9,7 @@ import {
   Image,
   Alert,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function CreateRequestScreen({ route }) {
   const [description, setDescription] = useState("");
   const [images, setImages] = useState([]);
+  const [loading, setLoading] = useState(false);
   const { technicianId } = route.params;
 
   // SERVICE
@@ -127,6 +129,8 @@ export default function CreateRequestScreen({ route }) {
         Alert.alert("Error", "User not logged in");
         return;
       }
+
+      setLoading(true);
 
       const user = JSON.parse(userStr);
 
@@ -319,8 +323,16 @@ export default function CreateRequestScreen({ route }) {
           </View>
 
           {/* BUTTON */}
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-            <Text style={styles.submitText}>Submit Request</Text>
+          <TouchableOpacity
+            style={[styles.submitBtn, loading && { opacity: 0.7 }]}
+            onPress={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={styles.submitText}>Submit Request</Text>
+            )}
           </TouchableOpacity>
         </ScrollView>
 

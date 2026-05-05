@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { showToast } from "../../utils/showToast";
+import { ActivityIndicator } from "react-native";
 
 export default function OtpScreen() {
   const route = useRoute();
@@ -73,7 +74,7 @@ export default function OtpScreen() {
       if (!res.ok) {
         throw new Error(text);
       }
-      showToast("success", "Đăng ký thành công");
+      showToast("success", "Xác thực thành công");
       navigation.replace("Login");
     } catch (err) {
       console.log("OTP VERIFY ERROR:", err);
@@ -155,7 +156,7 @@ export default function OtpScreen() {
         onPress={handleVerify}
         disabled={loading}
       >
-        <Text style={styles.btnText}>{loading ? "Loading..." : "Verify"}</Text>
+        <Text style={styles.btnText}>{loading ? <ActivityIndicator color= "#fff"/> : "Verify"}</Text>
       </TouchableOpacity>
     </View>
   );
