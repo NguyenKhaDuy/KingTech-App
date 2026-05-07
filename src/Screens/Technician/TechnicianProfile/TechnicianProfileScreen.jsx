@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { disconnectWebSocket } from "../../../utils/stompClient";
 
 export default function TechnicianProfileScreen({ navigation }) {
   const [avatar, setAvatar] = useState("https://i.pravatar.cc/150");
@@ -39,6 +41,25 @@ export default function TechnicianProfileScreen({ navigation }) {
 
     if (!result.canceled) {
       setAvatar(result.assets[0].uri);
+    }
+  };
+
+  const handleLogout = async (navigation) => {
+    try {
+      // Xóa dữ liệu
+      await AsyncStorage.removeItem("token");
+      await AsyncStorage.removeItem("user");
+
+      // Ngắt websocket
+      disconnectWebSocket();
+
+      // Quay về màn login (reset stack luôn)
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Login" }],
+      });
+    } catch (error) {
+      console.log("LOGOUT ERROR:", error);
     }
   };
 
@@ -72,20 +93,33 @@ export default function TechnicianProfileScreen({ navigation }) {
           }
         />
         <MenuItem
-          icon="location-outline" title="Quản lý vị trí"
+          icon="location-outline"
+          title="Quản lý vị trí"
           onPress={() =>
             navigation.navigate("TechLocationManage", {
               technicianId: user.id_user,
             })
           }
         />
-        <MenuItem icon="mail-outline" title="Quản lý Email" onPress={() => navigation.navigate("ChangeEmail")}  />
-        <MenuItem icon="key-outline" title="Đổi mật khẩu" onPress={() => navigation.navigate("ChangePassword")}/>
-        <MenuItem icon="person-outline" title="Chỉnh sửa tài khoản" onPress={() => navigation.navigate("EditProfile")} />
+        <MenuItem
+          icon="mail-outline"
+          title="Quản lý Email"
+          onPress={() => navigation.navigate("ChangeEmail")}
+        />
+        <MenuItem
+          icon="key-outline"
+          title="Đổi mật khẩu"
+          onPress={() => navigation.navigate("ChangePassword")}
+        />
+        <MenuItem
+          icon="person-outline"
+          title="Chỉnh sửa tài khoản"
+          onPress={() => navigation.navigate("EditProfile")}
+        />
       </View>
 
       {/* LOGOUT */}
-      <TouchableOpacity style={styles.logoutBtn}>
+      <TouchableOpacity style={styles.logoutBtn} onPress={() => handleLogout(navigation)}>
         <Ionicons name="log-out-outline" size={20} color="#ff4444" />
         <Text style={styles.logoutText}>Đăng xuất</Text>
       </TouchableOpacity>

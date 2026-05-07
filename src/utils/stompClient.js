@@ -30,7 +30,7 @@ export function connectWebSocket(token) {
       stompClient.subscribe("/user/queue/notify", (msg) => {
         const data = JSON.parse(msg.body);
 
-        console.log("WS RAW:", data);
+        // console.log("WS RAW:", data);
 
         globalListeners.forEach((fn) => fn(data));
       });

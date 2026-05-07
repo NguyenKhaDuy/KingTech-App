@@ -5,13 +5,23 @@ import { useNavigation } from "@react-navigation/native";
 
 export default function ActionButtons({ status, orderId, invoice }) {
   const navigation = useNavigation();
+
+  // ===== CHECK INVOICE =====
+  const hasInvoice = !!invoice?.id_invoices;
+
+  const isCompleted = status === "COMPLETED";
+
+  const canCreateInvoice = isCompleted && !hasInvoice;
+  const canViewInvoice = hasInvoice;
+
   return (
     <View style={styles.row}>
+      {/* CHI TIẾT */}
       <TouchableOpacity
         style={styles.btn}
         onPress={() => {
           navigation.navigate("RequestTechDetail", {
-            orderId: orderId,
+            orderId,
           });
         }}
       >
@@ -19,11 +29,12 @@ export default function ActionButtons({ status, orderId, invoice }) {
         <Text style={styles.text}>Chi tiết</Text>
       </TouchableOpacity>
 
+      {/* CẬP NHẬT */}
       <TouchableOpacity
         style={[styles.btn, styles.primary]}
         onPress={() => {
           navigation.navigate("UpdateRequestStatus", {
-            orderId: orderId,
+            orderId,
             currentStatus: status,
           });
         }}
@@ -36,12 +47,14 @@ export default function ActionButtons({ status, orderId, invoice }) {
       <TouchableOpacity
         style={[
           styles.btn,
-          status === "COMPLETED" ? styles.orange : styles.disabled,
+          canCreateInvoice ? styles.orange : styles.disabled,
         ]}
-        disabled={status !== "COMPLETED"}
+        disabled={!canCreateInvoice}
         onPress={() => {
+          if (!canCreateInvoice) return;
+
           navigation.navigate("InvoiceCreate", {
-            orderId: orderId,
+            orderId,
           });
         }}
       >
@@ -53,12 +66,14 @@ export default function ActionButtons({ status, orderId, invoice }) {
       <TouchableOpacity
         style={[
           styles.btn,
-          status === "COMPLETED" ? styles.green : styles.disabled,
+          canViewInvoice ? styles.green : styles.disabled,
         ]}
-        disabled={status !== "COMPLETED"}
+        disabled={!canViewInvoice}
         onPress={() => {
+          if (!canViewInvoice) return;
+
           navigation.navigate("InvoiceTechDetail", {
-            invoiceId: invoice.id_invoices,
+            invoiceId: invoice?.id_invoices,
           });
         }}
       >

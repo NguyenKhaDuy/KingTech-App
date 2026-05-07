@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
 
-export default function Header({ unreadCount = 3, navigation }) {
+export default function Header({ unreadCount, navigation }) {
   return (
     <View style={styles.header}>
       <Text style={styles.title}>KingTech</Text>
