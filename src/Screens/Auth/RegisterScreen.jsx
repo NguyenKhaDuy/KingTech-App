@@ -12,6 +12,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { showToast } from "../../utils/showToast";
+import { ActivityIndicator } from "react-native";
 
 export default function RegisterScreen() {
   const navigation = useNavigation();
@@ -219,7 +220,7 @@ export default function RegisterScreen() {
         disabled={loading}
       >
         <Text style={styles.registerText}>
-          {loading ? "Loading..." : "Sign Up"}
+          {loading ? <ActivityIndicator color="#fff"/> : "Sign Up"}
         </Text>
       </TouchableOpacity>
 

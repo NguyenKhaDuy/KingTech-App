@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { showToast } from "../../../utils/showToast";
@@ -36,6 +37,7 @@ export default function EditProfileScreen({ navigation, route }) {
   const [dob, setDob] = useState("");
   const [gender, setGender] = useState("");
   const [address, setAddress] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -49,6 +51,7 @@ export default function EditProfileScreen({ navigation, route }) {
 
   const handleSave = async () => {
     try {
+      setLoading(true);
       const token = await AsyncStorage.getItem("token");
       const userStr = await AsyncStorage.getItem("user");
 
@@ -172,8 +175,16 @@ export default function EditProfileScreen({ navigation, route }) {
       </View>
 
       {/* SAVE BUTTON */}
-      <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-        <Text style={styles.saveText}>Lưu thay đổi</Text>
+      <TouchableOpacity
+        style={[styles.saveBtn, loading && { opacity: 0.7 }]}
+        onPress={handleSave}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.saveText}>Lưu thay đổi</Text>
+        )}
       </TouchableOpacity>
     </ScrollView>
   );

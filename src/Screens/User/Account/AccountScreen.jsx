@@ -177,13 +177,13 @@ export default function AccountScreen({ navigation }) {
         <MenuItem
           icon="lock-closed-outline"
           title="Đổi mật khẩu"
-          onPress={() => navigation.navigate("ChangePassword")}
+          onPress={() => navigation.navigate("ChangePassword", {email: profile?.email})}
         />
 
         <MenuItem
           icon="mail-outline"
           title="Đổi email"
-          onPress={() => navigation.navigate("ChangeEmail")}
+          onPress={() => navigation.navigate("ChangeEmail", {email: profile?.email})}
         />
 
         <MenuItem

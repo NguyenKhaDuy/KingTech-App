@@ -41,10 +41,7 @@ export default function NotificationDetailScreen({ route, navigation }) {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      // debug tránh lỗi "<"
       const text = await res.text();
-      console.log("DETAIL:", text);
 
       let json;
       try {

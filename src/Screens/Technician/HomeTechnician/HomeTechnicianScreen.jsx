@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,8 +8,36 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { Image } from "react-native";
+import avatar_default from "../../../../assets/avatar_default.jpg";
 
 export default function HomeTechnicianScreen() {
+  const [name, setName] = useState(null);
+  const [avatar, setAvatar] = useState(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userStr = await AsyncStorage.getItem("user");
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          if (user?.full_name) {
+            setName(user.full_name);
+          }
+          if (user?.avatarBase64) {
+            setAvatar(user.avatarBase64); // base64
+          }
+        }
+      } catch (err) {
+        console.log("Lỗi đọc user:", err);
+      }
+    };
+
+    loadUser();
+  }, []);
+
   const jobs = [
     {
       id: "1",
@@ -43,16 +71,34 @@ export default function HomeTechnicianScreen() {
     </View>
   );
 
+
   return (
-    <SafeAreaView edges={['top']} style={styles.container}>
+    <SafeAreaView edges={["top"]} style={styles.container}>
       {/* HEADER */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.hello}>Xin chào 👋</Text>
-          <Text style={styles.name}>Kỹ thuật viên</Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.hello}>Xin chào </Text>
+            <MaterialCommunityIcons
+              name="hand-wave-outline"
+              size={18}
+              color="#FFD700"
+            />
+          </View>
+          <Text style={styles.name}>{name}</Text>
         </View>
-
-        <Ionicons name="person-circle-outline" size={40} color="#fff" />
+        {avatar ? (
+          <Image
+            source={{
+              uri: avatar.startsWith("data:image")
+                ? avatar
+                : `data:image/jpeg;base64,${avatar}`,
+            }}
+            style={styles.avatar}
+          />
+        ) : (
+          <Image source={avatar_default} style={styles.avatar} />
+        )}
       </View>
 
       {/* BODY */}
@@ -206,5 +252,10 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 13,
     fontWeight: "600",
+  },
+  avatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 30,
   },
 });

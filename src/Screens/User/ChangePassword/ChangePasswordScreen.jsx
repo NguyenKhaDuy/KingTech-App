@@ -8,23 +8,67 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { showToast } from "../../../utils/showToast";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { ActivityIndicator } from "react-native";
 
-export default function ChangePasswordScreen({ navigation }) {
+export default function ChangePasswordScreen({ navigation, route }) {
   const [oldPass, setOldPass] = useState("");
   const [newPass, setNewPass] = useState("");
   const [confirmPass, setConfirmPass] = useState("");
+  const { email } = route.params;
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (newPass !== confirmPass) {
-      alert("Mật khẩu không khớp");
+      showToast("error", "Mật khẩu không khớp");
       return;
     }
 
-    navigation.navigate("OtpScreen"); 
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("user");
+      setLoading(true);
+
+      if (!token || !userStr) return;
+
+      const user = JSON.parse(userStr);
+      console.log(email);
+
+      const res = await axios.post(
+        "http://10.0.2.2:8082/api/changepassword/",
+        {
+          old_password: oldPass,
+          new_password: newPass,
+          email: email,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (res.status === 200) {
+        showToast("success", "OTP đã được gửi");
+
+        navigation.navigate("OtpScreen", {
+          email: email,
+          type: "CHANGE_PASSWORD",
+        });
+      }
+    } catch (err) {
+      console.log(err?.response?.data || err.message);
+      showToast("error", "Không thể gửi OTP");
+    }
   };
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1, backgroundColor: "#ff6600" }}>
+    <SafeAreaView
+      edges={["top"]}
+      style={{ flex: 1, backgroundColor: "#ff6600" }}
+    >
       {/* HEADER */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -60,8 +104,16 @@ export default function ChangePasswordScreen({ navigation }) {
           onChangeText={setConfirmPass}
         />
 
-        <TouchableOpacity style={styles.btn} onPress={handleSubmit}>
-          <Text style={styles.btnText}>Tiếp tục</Text>
+        <TouchableOpacity
+          style={[styles.btn, loading && { opacity: 0.7 }]}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>Tiếp tục</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -82,7 +134,7 @@ const styles = StyleSheet.create({
   title: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "bold"
+    fontWeight: "bold",
   },
 
   content: {

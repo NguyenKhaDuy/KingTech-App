@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -14,7 +15,6 @@ import { useContext } from "react";
 import { NotificationContext } from "../../../Contexts/NotificationProvider ";
 
 export default function NotificationScreen({ navigation }) {
-  // const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const { notifications, setNotifications, setUnreadCount } =
     useContext(NotificationContext);
@@ -55,7 +55,6 @@ export default function NotificationScreen({ navigation }) {
       if (json.message === "Success") {
         //SORT trước (mới nhất lên đầu)
         const sorted = [...json.data].sort((a, b) => {
-          console.log(a.dateTime);
           const dateA = new Date(
             a.dateTime[0],
             a.dateTime[1] - 1,
@@ -101,15 +100,14 @@ export default function NotificationScreen({ navigation }) {
     fetchNotifications();
   }, []);
 
-
   // ===== CLICK =====
   const handlePress = (item) => {
     setNotifications((prev) => {
       const updated = prev.map((n) =>
-        n.id === item.id ? { ...n, isRead: true } : n,
+        n.idUserNotify === item.idUserNotify ? { ...n, isRead: true } : n,
       );
 
-      // 🔥 cập nhật lại badge
+      //cập nhật lại badge
       const count = updated.filter((n) => !n.isRead).length;
       setUnreadCount(count);
 
@@ -121,6 +119,16 @@ export default function NotificationScreen({ navigation }) {
       id_user_notify: item.idUserNotify,
     });
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      setNotifications((prev) => {
+        const count = prev.filter((n) => !n.isRead).length;
+        setUnreadCount(count);
+        return prev;
+      });
+    }, []),
+  );
 
   // ===== RENDER =====
   const renderItem = ({ item }) => (
@@ -165,7 +173,11 @@ export default function NotificationScreen({ navigation }) {
         ) : (
           <FlatList
             data={notifications}
-            keyExtractor={(item) => item.idUserNotify.toString()}
+            keyExtractor={(item, index) =>
+              item.idUserNotify
+                ? item.idUserNotify.toString()
+                : index.toString()
+            }
             renderItem={renderItem}
             showsVerticalScrollIndicator={false}
           />

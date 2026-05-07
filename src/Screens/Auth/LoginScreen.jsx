@@ -13,6 +13,7 @@ import { showToast } from "../../utils/showToast";
 import { connectWebSocket } from "../../utils/stompClient";
 
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { ActivityIndicator } from "react-native";
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -137,7 +138,7 @@ export default function LoginScreen() {
 
       {/* LOGIN BUTTON */}
       <TouchableOpacity style={styles.loginBtn} onPress={handleLogin}>
-        <Text style={styles.loginText}>{loading ? "Loading..." : "Login"}</Text>
+        <Text style={styles.loginText}>{loading ? <ActivityIndicator color= "#fff"/> : "Login"}</Text>
       </TouchableOpacity>
 
       {/* GOOGLE BUTTON */}
