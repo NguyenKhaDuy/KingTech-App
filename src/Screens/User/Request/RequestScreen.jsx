@@ -16,6 +16,7 @@ import BillCard from "../../../Components/User/Request/BillCard";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as WebBrowser from "expo-web-browser";
 import { showToast } from "../../../utils/showToast";
+import * as Linking from "expo-linking";
 
 const mapStatus = (status) => {
   switch (status) {
@@ -60,6 +61,8 @@ export default function RequestScreen({ navigation }) {
   const [loadingBank, setLoadingBank] = useState(false);
   const [selectedBill, setSelectedBill] = useState(null);
 
+  const [checkingPayment, setCheckingPayment] = useState(null);
+
   const requestStatuses = [
     {
       key: "REQUEST_CREATED",
@@ -78,8 +81,8 @@ export default function RequestScreen({ navigation }) {
 
   const billStatuses = [
     { key: "all", label: "All", icon: "apps-outline" },
-    { key: "pending", label: "Chưa thanh toán", icon: "time-outline" },
-    { key: "completed", label: "Đã thanh toán", icon: "cash-outline" },
+    { key: "UNPAID", label: "Chưa thanh toán", icon: "time-outline" },
+    { key: "PAID", label: "Đã thanh toán", icon: "cash-outline" },
   ];
 
   useEffect(() => {
@@ -181,18 +184,19 @@ export default function RequestScreen({ navigation }) {
   }, [activeTab]);
 
   //tính số lượng
-  const getStatusCounts = (list) => {
+  const getStatusCounts = (list, field) => {
     const counts = {};
 
     list.forEach((item) => {
-      counts[item.status_code] = (counts[item.status_code] || 0) + 1;
+      const key = item[field];
+      counts[key] = (counts[key] || 0) + 1;
     });
 
     return counts;
   };
 
-  const requestCounts = getStatusCounts(requests);
-  const billCounts = getStatusCounts(bills);
+  const requestCounts = getStatusCounts(requests, "status_code");
+  const billCounts = getStatusCounts(bills, "name_status");
 
   const data = activeTab === "requests" ? requests : bills;
   const statuses =
@@ -207,9 +211,13 @@ export default function RequestScreen({ navigation }) {
         }));
   const currentStatus = activeTab === "requests" ? requestStatus : billStatus;
 
-  const filtered = data.filter(
-    (item) => currentStatus === "all" || item.status_code === currentStatus,
-  );
+  const filtered = data.filter((item) => {
+    if (currentStatus === "all") return true;
+
+    return activeTab === "requests"
+      ? item.status_code === currentStatus
+      : item.name_status === currentStatus;
+  });
 
   const handleStatusChange = (key) => {
     activeTab === "requests" ? setRequestStatus(key) : setBillStatus(key);
@@ -222,8 +230,8 @@ export default function RequestScreen({ navigation }) {
 
       const payload = {
         bank: bankCode,
-        amount: Number(item.price.replace(/\D/g, "")),
-        id_request: String(item.id),
+        amount: Number(item.total_amount),
+        id_request: String(item.id_invoices),
         requestType: "invoice",
         userAgent: "mobile",
       };
@@ -239,15 +247,51 @@ export default function RequestScreen({ navigation }) {
 
       const paymentUrl = await res.text();
 
-      const result = await WebBrowser.openAuthSessionAsync(paymentUrl);
+      // LƯU ID ĐỂ CHECK
+      setCheckingPayment(item.id_invoices);
 
-      if (result.type === "00") {
-        fetchBills();
-      }
+      // MỞ VNPAY
+      WebBrowser.openBrowserAsync(paymentUrl);
     } catch (err) {
-      console.log("Thanh toán lỗi:", err);
+      console.log(err);
+
+      showToast("error", "Thanh toán thất bại");
     }
   };
+
+  useEffect(() => {
+    if (!checkingPayment) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const checkRes = await fetch(
+          `http://10.0.2.2:8082/api/invoices/id-invoice=${checkingPayment}`,
+        );
+
+        const checkJson = await checkRes.json();
+
+        console.log("CHECK STATUS:", checkJson);
+
+        if (checkJson?.data?.name_status === "PAID") {
+          clearInterval(interval);
+
+          setCheckingPayment(null);
+
+          showToast("success", "Thanh toán thành công");
+
+          fetchBills();
+
+          navigation.navigate("CustomerMain", {
+            screen: "Request",
+          });
+        }
+      } catch (err) {
+        console.log("Polling error:", err);
+      }
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [checkingPayment]);
 
   //LẤY DANH SÁCH NGÂN HÀNG
   useEffect(() => {

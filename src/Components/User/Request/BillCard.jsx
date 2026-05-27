@@ -18,7 +18,7 @@ export default function BillCard({ item, onPay, onViewInvoice }) {
         <Text style={styles.status}>{item.name_status}</Text>
       </View>
 
-      {item.status === "pending" ? (
+      {item.name_status === "UNPAID" ? (
         <TouchableOpacity style={styles.payBtn} onPress={() => onPay(item)}>
           <Text style={styles.text}>Thanh toán</Text>
         </TouchableOpacity>

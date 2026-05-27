@@ -1,5 +1,8 @@
 import React, { useRef, useEffect } from "react";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  createNavigationContainerRef,
+  NavigationContainer,
+} from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 
 import { Toast, setToastRef } from "./src/utils/showToast";
@@ -27,13 +30,18 @@ import UpdateRequestStatusScreen from "./src/Screens/Technician/UpdateRequestSta
 import NotificationTechDetailScreen from "./src/Screens/Technician/NotificationTechDetail/NotificationTechDetailScreen";
 import TechSkillManagerScreen from "./src/Screens/Technician/TechSkillManager/TechSkillManagerScreen";
 import TechLocationManagerScreen from "./src/Screens/Technician/TechLocationManager/TechLocationManagerScreen";
+import TechServiceManagerScreen from "./src/Screens/Technician/TechnicianServiceManager/TechServiceManagerScreen";
 import StartScreen from "./src/Screens/StartScreen/StartScreen";
 import { NotificationProvider } from "./src/Contexts/NotificationProvider ";
 import "./src/Contexts/NotificationHandler";
 import { Platform } from "react-native";
+import * as Linking from "expo-linking";
 import * as Notifications from "expo-notifications";
+import * as WebBrowser from "expo-web-browser";
 
 const Stack = createStackNavigator();
+
+
 
 export default function App() {
   const toastRef = useRef();
@@ -181,6 +189,11 @@ export default function App() {
           <Stack.Screen
             name="TechLocationManage"
             component={TechLocationManagerScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="TechServiceManage"
+            component={TechServiceManagerScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>
