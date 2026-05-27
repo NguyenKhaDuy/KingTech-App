@@ -21,7 +21,7 @@ export default function CreateRequestScreen({ route }) {
   const [description, setDescription] = useState("");
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { technicianId } = route.params;
+  const technicianId = route.params?.technicianId;
 
   // SERVICE
   const [services, setServices] = useState([]);
